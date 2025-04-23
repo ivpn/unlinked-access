@@ -16,15 +16,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
-      - name: Set up sparse checkout
-        run: |
-          git sparse-checkout init --cone
-          git sparse-checkout set api
       - name: Pull changes from PR branch
         run: git pull origin ${{ github.event.pull_request.head.ref }}
-      - name: Move directory
-        run: |
-          mv api/* .
       - name: Run Gosec Security Scanner
         uses: securego/gosec@master
         with:
