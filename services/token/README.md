@@ -1,7 +1,7 @@
-## Manifest Generation Service
-`generator`
+## Token Generation Service
+`token`
 
-The Manifest Generation Service creates comprehensive, signed lists of all valid tokens along with their associated subscription properties. These manifests serve as the authoritative source of subscription information for mailX and other applications.
+The Token Generation Service is responsible for creating secure, non-linkable tokens that allow IVPN users to authenticate with mailX without revealing their identity. This component interfaces directly with the Hardware Security Module (HSM) to ensure that the cryptographic operations remain secure and tamper-resistant.
 
 Key responsibilities include:
 

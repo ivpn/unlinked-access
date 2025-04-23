@@ -3,5 +3,5 @@ package main
 import "log"
 
 func main() {
-	log.Println("token service started")
+	log.Println("generator service started")
 }
