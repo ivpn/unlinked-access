@@ -32,8 +32,8 @@ The Token Verification Library is integrated into mailX to verify tokens and man
 
 ### Prerequisites
 
-- Docker: [Install Docker](https://docs.docker.com/get-docker/)
-- Docker Compose: [Install Docker Compose](https://docs.docker.com/compose/install/)
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
 ### Usage
 1. Clone the repo: `git clone <repo-url> && cd <repo-dir>`
