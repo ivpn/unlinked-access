@@ -1,7 +1,7 @@
 ## Manifest Generation Service
 `generator`
 
-The Manifest Generation Service creates comprehensive, signed lists of all valid tokens along with their associated subscription properties. These manifests serve as the authoritative source of subscription information for mailX and other applications.
+The Manifest Generation Service creates comprehensive, signed lists of all valid tokens along with their associated subscription properties. These manifests serve as the authoritative source of subscription information for MailX and other applications.
 
 Key responsibilities:
 

@@ -1,7 +1,7 @@
 ## Pre-Authorization Service
 `preauth`
 
-The Pre-Authorization API provides immediate verification for new user signups, ensuring that users can access mailX instantly after signup rather than waiting for the next manifest update.
+The Pre-Authorization API provides immediate verification for new user signups, ensuring that users can access MailX instantly after signup rather than waiting for the next manifest update.
 
 Key responsibilities:
 
