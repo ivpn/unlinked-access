@@ -3,7 +3,7 @@
 
 The Manifest Generation Service creates comprehensive, signed lists of all valid tokens along with their associated subscription properties. These manifests serve as the authoritative source of subscription information for mailX and other applications.
 
-Key responsibilities include:
+Key responsibilities:
 
 - Collecting current subscription status information for all IVPN users
 - Creating a structured manifest document containing token hashes and subscription details

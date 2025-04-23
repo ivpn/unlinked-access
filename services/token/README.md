@@ -3,7 +3,7 @@
 
 The Token Generation Service is responsible for creating secure, non-linkable tokens that allow IVPN users to authenticate with mailX without revealing their identity. This component interfaces directly with the Hardware Security Module (HSM) to ensure that the cryptographic operations remain secure and tamper-resistant.
 
-Key responsibilities include:
+Key responsibilities:
 
 - Creating cryptographically secure tokens for users based on their IVPN user ID
 - Managing the secure association between IVPN users and their tokens
