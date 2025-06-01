@@ -1,0 +1,15 @@
+name: auth
+
+services:
+  token:
+    build: ./services/token
+    container_name: auth-token
+    restart: unless-stopped
+    ports:
+      - "50051:50051"
+    networks:
+      server:
+
+networks:
+  server:
+    driver: bridge
