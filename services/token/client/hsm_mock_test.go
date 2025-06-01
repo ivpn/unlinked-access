@@ -9,7 +9,7 @@ import (
 	"ivpn.net/auth/services/token/model"
 )
 
-func TestMockHSMClient_Token(t *testing.T) {
+func TestMockHSM_Token(t *testing.T) {
 	tests := []struct {
 		name      string
 		input     string
@@ -49,7 +49,7 @@ func TestMockHSMClient_Token(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := NewMockHSMClient()
+			h := NewMockHSM()
 
 			// Note the time before generating the token
 			beforeTime := time.Now()
@@ -101,9 +101,9 @@ func TestMockHSMClient_Token(t *testing.T) {
 	}
 }
 
-func TestMockHSMClient_TokenConsistency(t *testing.T) {
+func TestMockHSM_TokenConsistency(t *testing.T) {
 	// Test that same input generates different tokens due to random secret key
-	h := NewMockHSMClient()
+	h := NewMockHSM()
 	token1, err := h.Token("same-input", 60)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
@@ -119,8 +119,8 @@ func TestMockHSMClient_TokenConsistency(t *testing.T) {
 	}
 }
 
-func TestMockHSMClient_ReturnedType(t *testing.T) {
-	h := NewMockHSMClient()
+func TestMockHSM_ReturnedType(t *testing.T) {
+	h := NewMockHSM()
 	result, err := h.Token("test", 30)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)

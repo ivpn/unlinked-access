@@ -6,7 +6,7 @@ services:
     container_name: auth-token
     restart: unless-stopped
     ports:
-      - "50051:50051"
+      - ${TOKEN_PORT}:${TOKEN_PORT}
     networks:
       server:
 

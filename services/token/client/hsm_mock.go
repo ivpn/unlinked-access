@@ -16,13 +16,13 @@ var (
 	ErrGenerateToken = "failed to generate token"
 )
 
-type MockHSMClient struct{}
+type MockHSM struct{}
 
-func NewMockHSMClient() *MockHSMClient {
-	return &MockHSMClient{}
+func NewMockHSM() *MockHSM {
+	return &MockHSM{}
 }
 
-func (h *MockHSMClient) Token(input string, ttlMinutes int) (*model.HSMToken, error) {
+func (h *MockHSM) Token(input string, ttlMinutes int) (*model.HSMToken, error) {
 	if input == "" {
 		return nil, fmt.Errorf(ErrEmptyInput)
 	}

@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"ivpn.net/auth/services/token/config"
 	"ivpn.net/auth/services/token/model"
 	proto "ivpn.net/auth/services/token/proto"
 )
@@ -18,16 +19,18 @@ type HSMClient interface {
 type Server struct {
 	HSMClient HSMClient
 	proto.UnimplementedTokenServer
+	Cfg *config.Config
 }
 
-func NewServer(hsm HSMClient) *Server {
+func New(hsm HSMClient, cfg config.Config) *Server {
 	return &Server{
 		HSMClient: hsm,
+		Cfg:       &cfg,
 	}
 }
 
 func (s *Server) Start() error {
-	lis, err := net.Listen("tcp", "127.0.0.1:50051")
+	lis, err := net.Listen("tcp", s.Cfg.Host+":"+s.Cfg.Port)
 	if err != nil {
 		log.Println(err)
 		return err

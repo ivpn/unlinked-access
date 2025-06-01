@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"ivpn.net/auth/services/token/config"
 	"ivpn.net/auth/services/token/model"
 )
 
@@ -34,7 +35,12 @@ func TestGenerateToken_Success(t *testing.T) {
 		mockError: nil,
 	}
 
-	svc := NewServer(mockHSM)
+	cfg, err := config.New()
+	if err != nil {
+		t.Fatalf("Failed to load configuration: %v", err)
+	}
+
+	svc := New(mockHSM, cfg)
 	inputStr := "test-input"
 	ttl := 60
 
@@ -67,7 +73,12 @@ func TestGenerateToken_Error(t *testing.T) {
 		mockError: expectedError,
 	}
 
-	svc := NewServer(mockHSM)
+	cfg, err := config.New()
+	if err != nil {
+		t.Fatalf("Failed to load configuration: %v", err)
+	}
+
+	svc := New(mockHSM, cfg)
 	inputStr := "test-input"
 	ttl := 30
 
@@ -104,6 +115,11 @@ func TestGenerateToken_DifferentParameters(t *testing.T) {
 		{"Long input", "this-is-a-very-long-input-string-for-testing", 120},
 	}
 
+	cfg, err := config.New()
+	if err != nil {
+		t.Fatalf("Failed to load configuration: %v", err)
+	}
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// Arrange
@@ -113,7 +129,7 @@ func TestGenerateToken_DifferentParameters(t *testing.T) {
 				mockError: nil,
 			}
 
-			svc := NewServer(mockHSM)
+			svc := New(mockHSM, cfg)
 
 			// Act
 			_, err := svc.generateToken(tc.input, tc.ttlMinutes)
