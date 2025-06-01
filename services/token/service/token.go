@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"context"
@@ -20,7 +20,7 @@ type Server struct {
 	proto.UnimplementedTokenServer
 }
 
-func New(hsm HSMClient) *Server {
+func NewServer(hsm HSMClient) *Server {
 	return &Server{
 		HSMClient: hsm,
 	}

@@ -1,4 +1,4 @@
-package main
+package service
 
 import (
 	"errors"
@@ -34,7 +34,7 @@ func TestGenerateToken_Success(t *testing.T) {
 		mockError: nil,
 	}
 
-	svc := New(mockHSM)
+	svc := NewServer(mockHSM)
 	inputStr := "test-input"
 	ttl := 60
 
@@ -67,7 +67,7 @@ func TestGenerateToken_Error(t *testing.T) {
 		mockError: expectedError,
 	}
 
-	svc := New(mockHSM)
+	svc := NewServer(mockHSM)
 	inputStr := "test-input"
 	ttl := 30
 
@@ -113,7 +113,7 @@ func TestGenerateToken_DifferentParameters(t *testing.T) {
 				mockError: nil,
 			}
 
-			svc := New(mockHSM)
+			svc := NewServer(mockHSM)
 
 			// Act
 			_, err := svc.generateToken(tc.input, tc.ttlMinutes)
