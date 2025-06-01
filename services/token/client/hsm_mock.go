@@ -7,6 +7,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"time"
+
+	"ivpn.net/auth/services/token/model"
 )
 
 var (
@@ -16,16 +18,11 @@ var (
 
 type MockHSMClient struct{}
 
-type MockHSMToken struct {
-	Token     string
-	ExpiresAt time.Time
-}
-
 func New() *MockHSMClient {
 	return &MockHSMClient{}
 }
 
-func (h *MockHSMClient) Token(input string, ttlMinutes int) (*MockHSMToken, error) {
+func (h *MockHSMClient) Token(input string, ttlMinutes int) (*model.HSMToken, error) {
 	if input == "" {
 		return nil, fmt.Errorf(ErrEmptyInput)
 	}
@@ -48,7 +45,7 @@ func (h *MockHSMClient) Token(input string, ttlMinutes int) (*MockHSMToken, erro
 	// Set expiration
 	expiresAt := time.Now().Add(time.Duration(ttlMinutes) * time.Minute)
 
-	return &MockHSMToken{
+	return &model.HSMToken{
 		Token:     token,
 		ExpiresAt: expiresAt,
 	}, nil
