@@ -39,7 +39,7 @@ func TestGenerateToken_Success(t *testing.T) {
 	ttl := 60
 
 	// Act
-	token, err := svc.GenerateToken(inputStr, ttl)
+	token, err := svc.generateToken(inputStr, ttl)
 
 	// Assert
 	if err != nil {
@@ -72,7 +72,7 @@ func TestGenerateToken_Error(t *testing.T) {
 	ttl := 30
 
 	// Act
-	token, err := svc.GenerateToken(inputStr, ttl)
+	token, err := svc.generateToken(inputStr, ttl)
 
 	// Assert
 	if err != expectedError {
@@ -116,7 +116,7 @@ func TestGenerateToken_DifferentParameters(t *testing.T) {
 			svc := New(mockHSM)
 
 			// Act
-			_, err := svc.GenerateToken(tc.input, tc.ttlMinutes)
+			_, err := svc.generateToken(tc.input, tc.ttlMinutes)
 
 			// Assert
 			if err != nil {

@@ -18,7 +18,7 @@ var (
 
 type MockHSMClient struct{}
 
-func New() *MockHSMClient {
+func NewMockHSMClient() *MockHSMClient {
 	return &MockHSMClient{}
 }
 
