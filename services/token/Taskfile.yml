@@ -1,9 +1,6 @@
 version: "3"
 
 tasks:
-  config:
-    cmds:
-      - cp .env.sample .env
   build:
     cmds:
       - docker compose build
