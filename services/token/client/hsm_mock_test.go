@@ -127,7 +127,7 @@ func TestMockHSMClient_ReturnedType(t *testing.T) {
 	}
 
 	// Verify the returned type is what we expect
-	if _, ok := interface{}(result).(*model.HSMToken); !ok {
+	if _, ok := any(result).(*model.HSMToken); !ok {
 		t.Error("Expected return type to be *model.HSMToken")
 	}
 }
