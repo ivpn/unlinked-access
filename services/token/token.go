@@ -25,6 +25,7 @@ func New(hsm HSMClient) *Server {
 		HSMClient: hsm,
 	}
 }
+
 func (s *Server) Start() error {
 	lis, err := net.Listen("tcp", "127.0.0.1:50051")
 	if err != nil {
