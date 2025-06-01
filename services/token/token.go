@@ -8,7 +8,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"ivpn.net/auth/services/token/model"
-	pb "ivpn.net/auth/services/token/proto"
+	proto "ivpn.net/auth/services/token/proto"
 )
 
 type HSMClient interface {
@@ -17,7 +17,7 @@ type HSMClient interface {
 
 type Server struct {
 	HSMClient HSMClient
-	pb.UnimplementedTokenServer
+	proto.UnimplementedTokenServer
 }
 
 func New(hsm HSMClient) *Server {
@@ -31,8 +31,9 @@ func (s *Server) Start() error {
 		log.Println(err)
 		return err
 	}
+
 	srv := grpc.NewServer()
-	pb.RegisterTokenServer(srv, s)
+	proto.RegisterTokenServer(srv, s)
 	reflection.Register(srv)
 
 	err = srv.Serve(lis)
@@ -46,14 +47,14 @@ func (s *Server) Start() error {
 	return nil
 }
 
-func (s *Server) Generate(ctx context.Context, req *pb.Request) (*pb.Response, error) {
+func (s *Server) Generate(ctx context.Context, req *proto.Request) (*proto.Response, error) {
 	token, err := s.generateToken(req.Input, int(req.TtlMinutes))
 	if err != nil {
 		log.Println(err)
 		return nil, err
 	}
 
-	return &pb.Response{
+	return &proto.Response{
 		Token: token.Token,
 	}, nil
 }
