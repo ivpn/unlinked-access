@@ -1,0 +1,65 @@
+package main
+
+import (
+	"context"
+	"log"
+	"net"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+	"ivpn.net/auth/services/token/model"
+	proto "ivpn.net/auth/services/token/proto"
+)
+
+type HSMClient interface {
+	Token(input string, ttlMinutes int) (*model.HSMToken, error)
+}
+
+type Server struct {
+	HSMClient HSMClient
+	proto.UnimplementedTokenServer
+}
+
+func New(hsm HSMClient) *Server {
+	return &Server{
+		HSMClient: hsm,
+	}
+}
+
+func (s *Server) Start() error {
+	lis, err := net.Listen("tcp", "127.0.0.1:50051")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	srv := grpc.NewServer()
+	proto.RegisterTokenServer(srv, s)
+	reflection.Register(srv)
+
+	err = srv.Serve(lis)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	log.Println("token service started")
+
+	return nil
+}
+
+func (s *Server) Generate(ctx context.Context, req *proto.Request) (*proto.Response, error) {
+	token, err := s.generateToken(req.Input, int(req.TtlMinutes))
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	return &proto.Response{
+		Token: token.Token,
+	}, nil
+}
+
+func (s *Server) generateToken(input string, ttlMinutes int) (*model.HSMToken, error) {
+	return s.HSMClient.Token(input, ttlMinutes)
+}

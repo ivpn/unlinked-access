@@ -1,7 +1,16 @@
 package main
 
-import "log"
+import (
+	"log"
+
+	"ivpn.net/auth/services/token/client"
+)
 
 func main() {
-	log.Println("token service started")
+	hsm := client.NewMockHSMClient()
+	server := New(hsm)
+	err := server.Start()
+	if err != nil {
+		log.Println(err)
+	}
 }

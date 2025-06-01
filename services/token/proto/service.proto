@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "/";
+
+message Request {
+    string input = 1;
+    int32 ttl_minutes = 2;
+}
+
+message Response {
+    string token = 1;
+}
+
+service Token {
+    rpc Generate(Request) returns (Response);
+}
