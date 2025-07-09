@@ -3,6 +3,7 @@ name: auth
 services:
   token:
     build: ./services/token
+    env_file: .env
     container_name: auth-token
     restart: unless-stopped
     ports:
