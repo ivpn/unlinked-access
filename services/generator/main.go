@@ -10,5 +10,10 @@ func main() {
 	// 	log.Println(err)
 	// }
 
+	// db, err := repository.NewDB(cfg.DB)
+	// if err != nil {
+	// 	log.Println(err)
+	// }
+
 	log.Println("generator service started")
 }
