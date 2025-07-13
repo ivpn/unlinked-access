@@ -30,13 +30,16 @@ func (s *Service) Start() error {
 		log.Printf("error scheduling account retrieval: %v", err)
 	}
 
+	// Start all the pending jobs
+	<-gocron.Start()
+
 	return err
 }
 
 func (s *Service) Generate() error {
 	log.Println("generating manifest...")
 
-	accounts, err := s.Store.GetAccounts()
+	accounts, err := s.GetAccounts()
 	if err != nil {
 		log.Printf("error fetching accounts: %v", err)
 		return err
