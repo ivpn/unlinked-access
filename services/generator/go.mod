@@ -3,6 +3,7 @@ module ivpn.net/auth/services/generator
 go 1.22.0
 
 require (
+	github.com/jasonlvhit/gocron v0.0.1
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/gorm v1.30.0
 )
