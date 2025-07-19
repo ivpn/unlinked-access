@@ -24,7 +24,7 @@ jobs:
       - name: Run Gosec Security Scanner
         run: |
           export PATH="$(go env GOPATH)/bin:$PATH"
-          find . -name 'go.mod' -exec dirname {} \; | grep -v '^./services/proto$' | while read module_dir; do
+          find . -name 'go.mod' -exec dirname {} \; | grep -v '^./proto$' | while read module_dir; do
             echo "Running gosec in $module_dir"
             (cd "$module_dir" && gosec -exclude-dir=proto ./...)
           done
