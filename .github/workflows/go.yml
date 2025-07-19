@@ -17,22 +17,28 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
-      # - name: Set up sparse checkout
-      #   run: |
-      #     git sparse-checkout init --cone
-      #     git sparse-checkout set services/token
       - name: Pull changes from PR branch
         run: git pull origin ${{ github.event.pull_request.head.ref }}
-      - name: Move to directory
-        run: |
-          cd services/token
       - name: Set up Go
         uses: actions/setup-go@v4
-      - name: Build
-        run: go build -v ./...
-      - name: Test
-        run: go test -v ./...
-      - name: Vet
-        run: go vet ./...
-      - name: Modernize
-        run: go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test ./...
+      - name: build
+        run: |
+          # Find all go.mod files under the repo
+          find . -name 'go.mod' -exec dirname {} \; | while read module_dir; do
+            echo "go build $module_dir"
+            (cd "$module_dir" && go build -v ./...)
+          done
+      - name: test
+        run: |
+          # Find all go.mod files under the repo
+          find . -name 'go.mod' -exec dirname {} \; | while read module_dir; do
+            echo "go test $module_dir"
+            (cd "$module_dir" && go test -v ./...)
+          done
+      - name: vet
+        run: |
+          # Find all go.mod files under the repo
+          find . -name 'go.mod' -exec dirname {} \; | while read module_dir; do
+            echo "go vet $module_dir"
+            (cd "$module_dir" && go vet ./...)
+          done
