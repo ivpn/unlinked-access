@@ -54,6 +54,12 @@ func (s *Service) Generate() error {
 	// Process the accounts
 	for _, account := range accounts {
 		log.Printf("processing account: %v", account.ID)
+		token, err := s.Token.GenerateToken(account.ID)
+		if err != nil {
+			log.Printf("error generating token for account %s: %v", account.ID, err)
+			continue
+		}
+		log.Printf("generated token for account %s: %s", account.ID, token)
 	}
 
 	return nil
