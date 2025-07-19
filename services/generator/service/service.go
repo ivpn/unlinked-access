@@ -9,16 +9,22 @@ import (
 
 type Store interface {
 	GetAccounts() ([]*model.Account, error)
-	GetAccountsMock(count int) ([]*model.Account, error)
+	GetAccountsMock(int) ([]*model.Account, error)
+}
+
+type TokenClient interface {
+	GenerateToken(string) (string, error)
 }
 
 type Service struct {
 	Store Store
+	Token TokenClient
 }
 
-func New(store Store) *Service {
+func New(store Store, tokenClient TokenClient) *Service {
 	return &Service{
 		Store: store,
+		Token: tokenClient,
 	}
 }
 

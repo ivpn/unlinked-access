@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"ivpn.net/auth/services/generator/client"
 	"ivpn.net/auth/services/generator/config"
 	"ivpn.net/auth/services/generator/repository"
 	"ivpn.net/auth/services/generator/service"
@@ -19,7 +20,12 @@ func main() {
 		log.Println(err)
 	}
 
-	service := service.New(db)
+	tokenClient, err := client.New(cfg.TokenServer)
+	if err != nil {
+		log.Println(err)
+	}
+
+	service := service.New(db, tokenClient)
 	err = service.Start()
 	if err != nil {
 		log.Println(err)
