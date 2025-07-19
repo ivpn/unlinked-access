@@ -7,9 +7,9 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	proto "ivpn.net/auth/services/proto"
 	"ivpn.net/auth/services/token/config"
 	"ivpn.net/auth/services/token/model"
-	proto "ivpn.net/auth/services/token/proto"
 )
 
 type HSMClient interface {
