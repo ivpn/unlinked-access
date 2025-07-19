@@ -1,7 +1,8 @@
 package repository
 
 import (
-	"math/rand"
+	"crypto/rand"
+	"math/big"
 	"strings"
 	"time"
 
@@ -17,7 +18,7 @@ func (d *Database) GetAccounts() ([]*model.Account, error) {
 
 func (d *Database) GetAccountsMock(count int) ([]*model.Account, error) {
 	accounts := make([]*model.Account, count)
-	for i := range count {
+	for i := 0; i < count; i++ {
 		accounts[i] = &model.Account{
 			ID:          randomId(),
 			CreatedAt:   time.Now(),
@@ -35,20 +36,25 @@ func randomId() string {
 	var id strings.Builder
 	id.WriteString("i-")
 
-	for i := 0; i < 4; i++ {
-		id.WriteByte(charset[rand.Intn(len(charset))])
+	max := big.NewInt(int64(len(charset)))
+
+	for i := range 4 {
+		n, _ := rand.Int(rand.Reader, max)
+		id.WriteByte(charset[n.Int64()])
 		if i == 3 {
 			id.WriteByte('-')
 		}
 	}
-	for i := 0; i < 4; i++ {
-		id.WriteByte(charset[rand.Intn(len(charset))])
+	for i := range 4 {
+		n, _ := rand.Int(rand.Reader, max)
+		id.WriteByte(charset[n.Int64()])
 		if i == 3 {
 			id.WriteByte('-')
 		}
 	}
-	for i := 0; i < 4; i++ {
-		id.WriteByte(charset[rand.Intn(len(charset))])
+	for range 4 {
+		n, _ := rand.Int(rand.Reader, max)
+		id.WriteByte(charset[n.Int64()])
 	}
 
 	return id.String()
