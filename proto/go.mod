@@ -1,4 +1,4 @@
-module ivpn.net/auth/services/proto
+module ivpn.net/auth/proto
 
 go 1.23.1
 
