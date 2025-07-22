@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"crypto/sha512"
 	"log"
 	"net"
 
@@ -52,6 +53,8 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Generate(ctx context.Context, req *proto.Request) (*proto.Response, error) {
+	sha512Input := sha512.Sum512([]byte(req.Input))
+	req.Input = string(sha512Input[:])
 	token, err := s.generateToken(req.Input, int(req.TtlMinutes))
 	if err != nil {
 		log.Println(err)
