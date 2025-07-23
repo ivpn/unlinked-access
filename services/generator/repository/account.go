@@ -11,7 +11,11 @@ import (
 
 func (d *Database) GetAccounts() ([]*model.Account, error) {
 	var accounts []*model.Account
-	err := d.Client.Where("is_new = ?", false).Find(&accounts).Error
+
+	err := d.Client.
+		Where("is_new = ?", false).
+		Where("EXISTS (SELECT 1 FROM email_service WHERE email_service.accounting_id = accounts.accounting_id)").
+		Find(&accounts).Error
 
 	return accounts, err
 }
