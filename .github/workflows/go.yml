@@ -42,3 +42,10 @@ jobs:
             echo "go vet $module_dir"
             (cd "$module_dir" && go vet ./...)
           done
+      - name: modernize
+        run: |
+          # Find all go.mod files under the repo
+          find . -name 'go.mod' -exec dirname {} \; | while read module_dir; do
+            echo "go vet $module_dir"
+            (cd "$module_dir" && go run golang.org/x/tools/gopls/internal/analysis/modernize/cmd/modernize@latest -test ./...)
+          done
