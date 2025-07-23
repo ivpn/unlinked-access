@@ -2,6 +2,7 @@ package repository
 
 import (
 	"crypto/rand"
+	"log"
 	"math/big"
 	"strings"
 	"time"
@@ -12,10 +13,15 @@ import (
 func (d *Database) GetAccounts() ([]*model.Account, error) {
 	var accounts []*model.Account
 
+	start := time.Now()
+
 	err := d.Client.
 		Where("is_new = ?", false).
 		Where("EXISTS (SELECT 1 FROM email_service WHERE email_service.accounting_id = accounts.accounting_id)").
 		Find(&accounts).Error
+
+	elapsed := time.Since(start)
+	log.Printf("GetAccounts() query completed in %s", elapsed)
 
 	return accounts, err
 }
