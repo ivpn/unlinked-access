@@ -11,6 +11,42 @@ services:
     networks:
       server:
 
+  generator:
+    build: ./services/generator
+    env_file: .env
+    container_name: auth-generator
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      server:
+    volumes:
+      - data:/app/data
+
+  db:
+    image: mariadb
+    container_name: auth-db
+    restart: unless-stopped
+    healthcheck:
+      test: "/usr/bin/mariadb --user=${DB_USER} --password=${DB_PASSWORD} --execute \"SHOW DATABASES;\""
+      interval: 2s
+      timeout: 10s
+      retries: 5
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db:/var/lib/mysql
+    networks:
+      server:
+
+volumes:
+  db:
+  data:
+
 networks:
   server:
     driver: bridge

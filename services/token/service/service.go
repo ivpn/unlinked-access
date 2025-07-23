@@ -7,9 +7,9 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	proto "ivpn.net/auth/services/proto"
 	"ivpn.net/auth/services/token/config"
 	"ivpn.net/auth/services/token/model"
-	proto "ivpn.net/auth/services/token/proto"
 )
 
 type HSMClient interface {
@@ -32,7 +32,7 @@ func New(hsm HSMClient, cfg config.Config) *Server {
 func (s *Server) Start() error {
 	log.Printf("Starting token service on %s:%s", s.Cfg.Host, s.Cfg.Port)
 
-	lis, err := net.Listen("tcp", s.Cfg.Host+":"+s.Cfg.Port)
+	lis, err := net.Listen("tcp", ":"+s.Cfg.Port)
 	if err != nil {
 		log.Println(err)
 		return err
