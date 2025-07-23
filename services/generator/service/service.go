@@ -2,7 +2,10 @@ package service
 
 import (
 	"crypto/sha256"
+	"encoding/json"
+	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -70,7 +73,6 @@ func (s *Service) GenerateManifest() (*model.Manifest, error) {
 
 	manifest := &model.Manifest{
 		ID:            uuid.New().String(),
-		Version:       "1.0.0",
 		CreatedAt:     time.Now(),
 		ValidUntil:    time.Now().Add(3 * time.Hour),
 		Subscriptions: subs,
@@ -118,4 +120,36 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 	}
 
 	return subscriptions, nil
+}
+
+func (s *Service) SaveManifest(manifest *model.Manifest) error {
+	log.Printf("saving manifest: %s", manifest.ID)
+
+	// Marshal the manifest to JSON
+	jsonData, err := json.MarshalIndent(manifest, "", "  ")
+	if err != nil {
+		log.Println("error marshalling to JSON:", err)
+		return err
+	}
+
+	timestamp := time.Now().Format("2006-01-02T15-04-05")
+	basePath := "/app/data"
+	timestampFilename := fmt.Sprintf("%s/%s.json", basePath, timestamp)
+	currentFilename := fmt.Sprintf("%s/current-manifest.json", basePath)
+
+	// Write both files
+	if err := os.WriteFile(timestampFilename, jsonData, 0644); err != nil {
+		log.Println("error writing timestamped file:", err)
+		return err
+	}
+	if err := os.WriteFile(currentFilename, jsonData, 0644); err != nil {
+		log.Println("error writing current-manifest file:", err)
+		return err
+	}
+
+	log.Println("manifest saved:")
+	log.Println(" -", timestampFilename)
+	log.Println(" -", currentFilename)
+
+	return nil
 }

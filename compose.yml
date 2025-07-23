@@ -21,6 +21,8 @@ services:
         condition: service_healthy
     networks:
       server:
+    volumes:
+      - data:/app/data
 
   db:
     image: mariadb
@@ -43,6 +45,7 @@ services:
 
 volumes:
   db:
+  data:
 
 networks:
   server:
