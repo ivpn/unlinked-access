@@ -18,7 +18,7 @@ func (d *Database) GetAccounts() ([]*model.Account, error) {
 
 func (d *Database) GetAccountsMock(count int) ([]*model.Account, error) {
 	accounts := make([]*model.Account, count)
-	for i := 0; i < count; i++ {
+	for i := range count {
 		accounts[i] = &model.Account{
 			ID:          randomId(),
 			CreatedAt:   time.Now(),
