@@ -122,34 +122,34 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 	return subscriptions, nil
 }
 
-func (s *Service) SaveManifest(manifest *model.Manifest) error {
-	log.Printf("saving manifest: %s", manifest.ID)
+func SaveManifest(m *model.Manifest) error {
+	log.Printf("saving manifest: %s", m.ID)
 
 	// Marshal the manifest to JSON
-	jsonData, err := json.MarshalIndent(manifest, "", "  ")
+	jsonData, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
-		log.Println("error marshalling to JSON:", err)
+		log.Println("error converting manifest to JSON:", err)
 		return err
 	}
 
 	timestamp := time.Now().Format("2006-01-02T15-04-05")
 	basePath := "/app/data"
-	timestampFilename := fmt.Sprintf("%s/%s.json", basePath, timestamp)
-	currentFilename := fmt.Sprintf("%s/current-manifest.json", basePath)
+	timestampFile := fmt.Sprintf("%s/%s.json", basePath, timestamp)
+	currentFile := fmt.Sprintf("%s/current.json", basePath)
 
 	// Write both files
-	if err := os.WriteFile(timestampFilename, jsonData, 0644); err != nil {
-		log.Println("error writing timestamped file:", err)
+	if err := os.WriteFile(timestampFile, jsonData, 0600); err != nil {
+		log.Println("error writing timestamp file:", err)
 		return err
 	}
-	if err := os.WriteFile(currentFilename, jsonData, 0644); err != nil {
-		log.Println("error writing current-manifest file:", err)
+	if err := os.WriteFile(currentFile, jsonData, 0600); err != nil {
+		log.Println("error writing current file:", err)
 		return err
 	}
 
 	log.Println("manifest saved:")
-	log.Println(" -", timestampFilename)
-	log.Println(" -", currentFilename)
+	log.Println(" -", timestampFile)
+	log.Println(" -", currentFile)
 
 	return nil
 }
