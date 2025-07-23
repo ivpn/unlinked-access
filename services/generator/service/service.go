@@ -2,6 +2,7 @@ package service
 
 import (
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -86,7 +87,6 @@ func (s *Service) GenerateManifest() (*model.Manifest, error) {
 		CreatedAt:     time.Now(),
 		ValidUntil:    time.Now().Add(3 * time.Hour),
 		Subscriptions: subs,
-		Signature:     "",
 	}
 
 	return manifest, nil
@@ -113,17 +113,17 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 
 	subscriptions := make([]model.Subscription, len(accounts))
 	for i, account := range accounts {
-		token, err := s.Token.GenerateToken(account.ID)
+		accountIDHash := sha512.Sum512([]byte(account.ID))
+		token, err := s.Token.GenerateToken(string(accountIDHash[:]))
 		if err != nil {
 			log.Printf("error generating token for account %s: %v", account.ID, err)
 			continue
 		}
 
-		sha256Token := sha256.Sum256([]byte(token))
-		token = string(sha256Token[:])
+		tokenHash := sha256.Sum256([]byte(token))
 
 		subscriptions[i] = model.Subscription{
-			TokenHash:   token,
+			TokenHash:   string(tokenHash[:]),
 			IsActive:    account.IsActive,
 			ActiveUntil: account.ActiveUntil,
 		}

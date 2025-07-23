@@ -7,5 +7,5 @@ type Manifest struct {
 	CreatedAt     time.Time      `json:"created_at"`
 	ValidUntil    time.Time      `json:"valid_until"`
 	Subscriptions []Subscription `json:"subscriptions"`
-	Signature     string         `json:"signature"`
+	Signature     string         `json:"signature,omitempty"`
 }
