@@ -64,7 +64,7 @@ func (s *Service) Start() error {
 func (s *Service) Generate() error {
 	log.Println("generating manifest...")
 
-	m, err := s.GenerateManifest()
+	m, err := s.CreateManifest()
 	if err != nil {
 		log.Printf("error generating manifest: %v", err)
 		return err
@@ -87,8 +87,8 @@ func (s *Service) Generate() error {
 	return nil
 }
 
-func (s *Service) GenerateManifest() (*model.Manifest, error) {
-	log.Println("generating metadata...")
+func (s *Service) CreateManifest() (*model.Manifest, error) {
+	log.Println("creating manifest...")
 
 	subs, err := s.GenerateSubscriptions()
 	if err != nil {
