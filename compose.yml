@@ -23,6 +23,16 @@ services:
       server:
     volumes:
       - data:/app/data
+  
+  distributor:
+    build: ./services/distributor
+    env_file: .env
+    container_name: auth-distributor
+    restart: unless-stopped
+    networks:
+      server:
+    volumes:
+      - data:/app/data
 
   db:
     image: mariadb
