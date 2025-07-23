@@ -6,12 +6,17 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jasonlvhit/gocron"
 	"ivpn.net/auth/services/generator/model"
 )
+
+const CURRENT_MANIFEST = "current.json"
+const BASE_PATH = "/app/data"
 
 type Store interface {
 	GetAccounts() ([]*model.Account, error)
@@ -39,7 +44,12 @@ func (s *Service) Start() error {
 
 	err := gocron.Every(1).Minute().Do(s.Generate)
 	if err != nil {
-		log.Printf("error scheduling account retrieval: %v", err)
+		log.Printf("error scheduling manifest generation: %v", err)
+	}
+
+	err = gocron.Every(1).Minute().Do(CleanupOldManifests(BASE_PATH))
+	if err != nil {
+		log.Printf("error scheduling manifest cleanup: %v", err)
 	}
 
 	// Start all the pending jobs
@@ -133,9 +143,9 @@ func SaveManifest(m *model.Manifest) error {
 	}
 
 	timestamp := time.Now().Format("2006-01-02T15-04-05")
-	basePath := "/app/data"
+	basePath := BASE_PATH
 	timestampFile := fmt.Sprintf("%s/%s.json", basePath, timestamp)
-	currentFile := fmt.Sprintf("%s/current.json", basePath)
+	currentFile := fmt.Sprintf("%s/%s", basePath, CURRENT_MANIFEST)
 
 	// Write both files
 	if err := os.WriteFile(timestampFile, jsonData, 0600); err != nil {
@@ -150,6 +160,44 @@ func SaveManifest(m *model.Manifest) error {
 	log.Println("manifest saved:")
 	log.Println(" -", timestampFile)
 	log.Println(" -", currentFile)
+
+	return nil
+}
+
+// Delete all JSON manifest files older than 7 days
+func CleanupOldManifests(dir string) error {
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return fmt.Errorf("failed to read manifest directory: %w", err)
+	}
+
+	// 7-day cutoff
+	cutoff := time.Now().AddDate(0, 0, -7)
+
+	for _, file := range files {
+		name := file.Name()
+
+		// Skip non-JSON files and current manifest
+		if file.IsDir() || !strings.HasSuffix(name, ".json") || name == CURRENT_MANIFEST {
+			continue
+		}
+
+		// Try parsing timestamp from filename (e.g., 2025-07-15T10-04-00.json)
+		timestampStr := strings.TrimSuffix(name, ".json")
+		timestamp, err := time.Parse("2006-01-02T15-04-05", timestampStr)
+		if err != nil {
+			continue
+		}
+
+		if timestamp.Before(cutoff) {
+			fullPath := filepath.Join(dir, name)
+			if err := os.Remove(fullPath); err != nil {
+				fmt.Printf("failed to delete old manifest %s: %v\n", name, err)
+			} else {
+				fmt.Printf("deleted old manifest: %s\n", name)
+			}
+		}
+	}
 
 	return nil
 }
