@@ -3,6 +3,7 @@ package service
 import (
 	"crypto/sha256"
 	"crypto/sha512"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -18,6 +19,7 @@ import (
 
 const CURRENT_MANIFEST = "current.json"
 const BASE_PATH = "/app/data"
+const STALE_DAYS = 1
 
 type Store interface {
 	GetAccounts() ([]*model.Account, error)
@@ -48,7 +50,7 @@ func (s *Service) Start() error {
 		log.Printf("error scheduling manifest generation: %v", err)
 	}
 
-	err = gocron.Every(1).Minute().Do(CleanupOldManifests(BASE_PATH))
+	err = gocron.Every(1).Minute().Do(RemoveStaleManifests(BASE_PATH))
 	if err != nil {
 		log.Printf("error scheduling manifest cleanup: %v", err)
 	}
@@ -62,13 +64,25 @@ func (s *Service) Start() error {
 func (s *Service) Generate() error {
 	log.Println("generating manifest...")
 
-	manifest, err := s.GenerateManifest()
+	m, err := s.GenerateManifest()
 	if err != nil {
 		log.Printf("error generating manifest: %v", err)
 		return err
 	}
 
-	log.Printf("generated manifest: %+v", manifest.ID)
+	err = SignManifest(m)
+	if err != nil {
+		log.Printf("error signing manifest: %v", err)
+		return err
+	}
+
+	err = SaveManifest(m)
+	if err != nil {
+		log.Printf("error saving manifest: %v", err)
+		return err
+	}
+
+	log.Printf("generated manifest: %+v", m.ID)
 
 	return nil
 }
@@ -164,15 +178,31 @@ func SaveManifest(m *model.Manifest) error {
 	return nil
 }
 
-// Delete all JSON manifest files older than 7 days
-func CleanupOldManifests(dir string) error {
+func SignManifest(m *model.Manifest) error {
+	log.Println("signing manifest...")
+
+	data, err := json.Marshal(m)
+	if err != nil {
+		log.Println("error marshaling manifest for signing:", err)
+		return err
+	}
+
+	hash := sha256.Sum256(data)
+	m.Signature = base64.StdEncoding.EncodeToString(hash[:])
+
+	log.Printf("manifest signed: %s", m.Signature)
+
+	return nil
+}
+
+func RemoveStaleManifests(dir string) error {
 	files, err := os.ReadDir(dir)
 	if err != nil {
 		return fmt.Errorf("failed to read manifest directory: %w", err)
 	}
 
-	// 7-day cutoff
-	cutoff := time.Now().AddDate(0, 0, -7)
+	// Calculate the cutoff time for stale manifests
+	cutoff := time.Now().AddDate(0, 0, -STALE_DAYS)
 
 	for _, file := range files {
 		name := file.Name()
