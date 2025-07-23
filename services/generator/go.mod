@@ -3,6 +3,7 @@ module ivpn.net/auth/services/generator
 go 1.23.1
 
 require (
+	github.com/google/uuid v1.6.0
 	github.com/jasonlvhit/gocron v0.0.1
 	google.golang.org/grpc v1.73.0
 	gorm.io/driver/mysql v1.6.0
