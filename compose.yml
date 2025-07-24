@@ -6,8 +6,6 @@ services:
     env_file: .env
     container_name: auth-token
     restart: unless-stopped
-    ports:
-      - ${TOKEN_PORT}:${TOKEN_PORT}
     networks:
       server:
 
