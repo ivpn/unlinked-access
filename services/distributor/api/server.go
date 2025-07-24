@@ -1,6 +1,8 @@
 package api
 
 import (
+	"compress/gzip"
+	"encoding/json"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -42,5 +44,17 @@ func (h *Handler) GetManifest(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.JSON(manifest)
+	c.Set("Content-Type", "application/json")
+	c.Set("Content-Encoding", "gzip")
+
+	gz := gzip.NewWriter(c.Context().Response.BodyWriter())
+	defer gz.Close()
+
+	enc := json.NewEncoder(gz)
+
+	if err := enc.Encode(manifest); err != nil {
+		return fiber.ErrInternalServerError
+	}
+
+	return nil
 }
