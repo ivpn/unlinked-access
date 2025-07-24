@@ -33,6 +33,7 @@ services:
       server:
     volumes:
       - data:/app/data
+      - data:/app/logs
 
   db:
     image: mariadb
