@@ -6,7 +6,6 @@ type APIConfig struct {
 	Port           string
 	PSK            string
 	PSKAllowOrigin string
-	LogFile        string
 }
 
 type Config struct {
@@ -19,7 +18,6 @@ func New() (Config, error) {
 			Port:           os.Getenv("DISTRIBUTOR_PORT"),
 			PSK:            os.Getenv("DISTRIBUTOR_PSK"),
 			PSKAllowOrigin: os.Getenv("DISTRIBUTOR_PSK_ALLOW_ORIGIN"),
-			LogFile:        os.Getenv("DISTRIBUTOR_LOG_FILE"),
 		},
 	}, nil
 }
