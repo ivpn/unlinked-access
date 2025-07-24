@@ -1,7 +1,20 @@
 package main
 
-import "log"
+import (
+	"log"
+
+	"ivpn.net/auth/services/distributor/api"
+	"ivpn.net/auth/services/distributor/config"
+)
 
 func main() {
-	log.Println("distributor service started")
+	cfg, err := config.New()
+	if err != nil {
+		log.Println(err)
+	}
+
+	err = api.Start(cfg.API)
+	if err != nil {
+		log.Println(err)
+	}
 }
