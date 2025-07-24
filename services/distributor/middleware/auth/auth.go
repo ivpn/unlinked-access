@@ -18,12 +18,28 @@ func NewPSK(cfg config.APIConfig) fiber.Handler {
 	}
 }
 
-func NewPSKCORS(cfg config.APIConfig) fiber.Handler {
+func NewCORS(cfg config.APIConfig) fiber.Handler {
 	return cors.New(cors.Config{
-		AllowOrigins:     cfg.PSKAllowOrigin,
+		AllowOrigins:     cfg.AllowOrigin,
 		AllowMethods:     fiber.MethodGet,
 		AllowCredentials: true,
 	})
+}
+
+func NewIPFilter(cfg config.APIConfig) fiber.Handler {
+	allowed := make(map[string]struct{})
+	for _, ip := range cfg.AllowedIPs {
+		allowed[ip] = struct{}{}
+	}
+
+	return func(c *fiber.Ctx) error {
+		clientIP := c.IP()
+		if _, ok := allowed[clientIP]; !ok {
+			return c.SendStatus(fiber.StatusUnauthorized)
+		}
+
+		return c.Next()
+	}
 }
 
 func GetToken(c *fiber.Ctx) string {
