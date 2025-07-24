@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"ivpn.net/auth/services/distributor/config"
 	"ivpn.net/auth/services/distributor/middleware/auth"
+	"ivpn.net/auth/services/distributor/middleware/compress"
 )
 
 func (h *Handler) SetupRoutes(cfg config.APIConfig) {
@@ -13,6 +14,7 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	h.Server.Use(healthcheck.New())
 	h.Server.Use(auth.NewPSKCORS(cfg))
 	h.Server.Use(auth.NewPSK(cfg))
+	h.Server.Use(compress.New())
 
 	h.Server.Get("/v1/manifest", limiter.New(), h.GetManifest)
 }
