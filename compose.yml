@@ -6,8 +6,6 @@ services:
     env_file: .env
     container_name: auth-token
     restart: unless-stopped
-    ports:
-      - ${TOKEN_PORT}:${TOKEN_PORT}
     networks:
       server:
 
@@ -19,6 +17,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    networks:
+      server:
+    volumes:
+      - data:/app/data
+  
+  distributor:
+    build: ./services/distributor
+    env_file: .env
+    container_name: auth-distributor
+    restart: unless-stopped
     networks:
       server:
     volumes:
