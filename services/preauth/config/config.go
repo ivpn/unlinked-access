@@ -20,8 +20,14 @@ type RedisConfig struct {
 	TLSInsecureSkipVerify bool // Optional: Only for testing, use false in production
 }
 
+type TokenServerConfig struct {
+	Host string
+	Port string
+}
+
 type Config struct {
-	Redis RedisConfig
+	Redis       RedisConfig
+	TokenServer TokenServerConfig
 }
 
 func New() (Config, error) {
@@ -41,6 +47,10 @@ func New() (Config, error) {
 			KeyFile:               os.Getenv("REDIS_KEY_FILE"),
 			CACertFile:            os.Getenv("REDIS_CA_CERT_FILE"),
 			TLSInsecureSkipVerify: os.Getenv("REDIS_TLS_INSECURE_SKIP_VERIFY") == "true",
+		},
+		TokenServer: TokenServerConfig{
+			Host: os.Getenv("TOKEN_HOST"),
+			Port: os.Getenv("TOKEN_PORT"),
 		},
 	}, nil
 }

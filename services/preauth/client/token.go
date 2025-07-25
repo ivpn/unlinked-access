@@ -6,7 +6,8 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"ivpn.net/auth/services/generator/config"
+
+	"ivpn.net/auth/services/preauth/config"
 	proto "ivpn.net/auth/services/proto"
 )
 
