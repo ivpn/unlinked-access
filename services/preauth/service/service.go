@@ -26,10 +26,10 @@ func New(cfg config.Config, cache Cache) *Service {
 	}
 }
 
-func (s *Service) AddPreAuth(ctx context.Context, accountId string) error {
+func (s *Service) GetPreAuth(ID string) error {
 	return nil
 }
 
-func (s *Service) GetPreAuth(ctx context.Context, accountId string) error {
+func (s *Service) AddPreAuth(accountId string) error {
 	return nil
 }
