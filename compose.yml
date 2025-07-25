@@ -50,9 +50,19 @@ services:
       - db:/var/lib/mysql
     networks:
       server:
+  
+  redis:
+    image: redis
+    container_name: auth-redis
+    restart: unless-stopped
+    volumes:
+      - redis:/data
+    networks:
+      server:
 
 volumes:
   db:
+  redis:
   data:
 
 networks:
