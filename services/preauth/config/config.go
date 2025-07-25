@@ -6,13 +6,18 @@ import (
 )
 
 type RedisConfig struct {
-	Addr             string
-	Addrs            []string
-	MasterName       string
-	Username         string
-	Password         string
-	FailoverUsername string
-	FailoverPassword string
+	Addr                  string
+	Addrs                 []string
+	MasterName            string
+	Username              string
+	Password              string
+	FailoverUsername      string
+	FailoverPassword      string
+	TLSEnabled            bool
+	CertFile              string
+	KeyFile               string
+	CACertFile            string
+	TLSInsecureSkipVerify bool // Optional: Only for testing, use false in production
 }
 
 type Config struct {
@@ -24,13 +29,18 @@ func New() (Config, error) {
 
 	return Config{
 		Redis: RedisConfig{
-			Addr:             os.Getenv("REDIS_ADDR"),
-			Addrs:            redisAddrs,
-			MasterName:       os.Getenv("REDIS_MASTER_NAME"),
-			Username:         os.Getenv("REDIS_USERNAME"),
-			Password:         os.Getenv("REDIS_PASSWORD"),
-			FailoverUsername: os.Getenv("REDIS_FAILOVER_USERNAME"),
-			FailoverPassword: os.Getenv("REDIS_FAILOVER_PASSWORD"),
+			Addr:                  os.Getenv("REDIS_ADDR"),
+			Addrs:                 redisAddrs,
+			MasterName:            os.Getenv("REDIS_MASTER_NAME"),
+			Username:              os.Getenv("REDIS_USERNAME"),
+			Password:              os.Getenv("REDIS_PASSWORD"),
+			FailoverUsername:      os.Getenv("REDIS_FAILOVER_USERNAME"),
+			FailoverPassword:      os.Getenv("REDIS_FAILOVER_PASSWORD"),
+			TLSEnabled:            os.Getenv("REDIS_TLS_ENABLED") == "true",
+			CertFile:              os.Getenv("REDIS_CERT_FILE"),
+			KeyFile:               os.Getenv("REDIS_KEY_FILE"),
+			CACertFile:            os.Getenv("REDIS_CA_CERT_FILE"),
+			TLSInsecureSkipVerify: os.Getenv("REDIS_TLS_INSECURE_SKIP_VERIFY") == "true",
 		},
 	}, nil
 }
