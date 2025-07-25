@@ -19,7 +19,7 @@ type Handler struct {
 }
 
 func Start(cfg config.APIConfig, service Service) error {
-	log.Printf("distributor server starting on :%s", cfg.Port)
+	log.Printf("preauth server starting on :%s", cfg.Port)
 
 	app := fiber.New()
 
