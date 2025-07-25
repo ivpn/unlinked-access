@@ -5,6 +5,13 @@ import (
 	"strings"
 )
 
+type APIConfig struct {
+	Port        string
+	PSK         string
+	AllowOrigin string
+	AllowedIPs  []string
+}
+
 type RedisConfig struct {
 	Addr                  string
 	Addrs                 []string
@@ -26,14 +33,22 @@ type TokenServerConfig struct {
 }
 
 type Config struct {
+	API         APIConfig
 	Redis       RedisConfig
 	TokenServer TokenServerConfig
 }
 
 func New() (Config, error) {
+	allowedIPs := strings.Split(os.Getenv("PREAUTH_ALLOWED_IPS"), ",")
 	redisAddrs := strings.Split(os.Getenv("REDIS_ADDRESSES"), ",")
 
 	return Config{
+		API: APIConfig{
+			Port:        os.Getenv("PREAUTH_PORT"),
+			PSK:         os.Getenv("PREAUTH_PSK"),
+			AllowOrigin: os.Getenv("PREAUTH_ALLOW_ORIGIN"),
+			AllowedIPs:  allowedIPs,
+		},
 		Redis: RedisConfig{
 			Addr:                  os.Getenv("REDIS_ADDR"),
 			Addrs:                 redisAddrs,
