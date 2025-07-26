@@ -13,3 +13,8 @@ func NewValidator() Validator {
 
 	return v
 }
+
+func ValidateUUID(uuid string) bool {
+	err := validator.New().Var(uuid, "required,uuid")
+	return err == nil
+}

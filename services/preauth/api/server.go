@@ -13,6 +13,7 @@ var (
 	ErrInvalidRequest = "The request is invalid."
 	AddPreAuthSuccess = "Pre-authentication added successfully."
 	AddPreAuthError   = "Failed to add pre-authentication."
+	GetPreAuthError   = "Failed to retrieve pre-authentication."
 )
 
 type Service interface {
@@ -73,5 +74,18 @@ func (h *Handler) AddPreAuth(c *fiber.Ctx) error {
 }
 
 func (h *Handler) GetPreAuth(c *fiber.Ctx) error {
-	return nil
+	id := c.Params("id")
+	if !utils.ValidateUUID(id) {
+		return c.Status(400).JSON(fiber.Map{
+			"error": ErrInvalidRequest,
+		})
+	}
+	preAuth, err := h.Service.GetPreAuth(id)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": GetPreAuthError,
+		})
+	}
+
+	return c.JSON(preAuth)
 }

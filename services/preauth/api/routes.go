@@ -13,6 +13,6 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	h.Server.Use(auth.NewCORS(cfg))
 	h.Server.Use(auth.NewPSK(cfg))
 
-	h.Server.Get("/v1/preauth", h.AddPreAuth)
-	h.Server.Post("/v1/preauth", h.GetPreAuth)
+	h.Server.Get("/v1/preauth/:id", h.GetPreAuth)
+	h.Server.Post("/v1/preauth", h.AddPreAuth)
 }
