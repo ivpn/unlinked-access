@@ -140,6 +140,7 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 			TokenHash:   string(tokenHash[:]),
 			IsActive:    account.IsActive,
 			ActiveUntil: account.ActiveUntil,
+			Tier:        account.Product,
 		}
 	}
 
