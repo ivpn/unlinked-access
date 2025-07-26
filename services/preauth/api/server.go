@@ -5,17 +5,26 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"ivpn.net/auth/services/preauth/config"
+	"ivpn.net/auth/services/preauth/model"
+	"ivpn.net/auth/services/preauth/utils"
+)
+
+var (
+	ErrInvalidRequest = "The request is invalid."
+	AddPreAuthSuccess = "Pre-authentication added successfully."
+	AddPreAuthError   = "Failed to add pre-authentication."
 )
 
 type Service interface {
 	AddPreAuth(string) error
-	GetPreAuth(string) error
+	GetPreAuth(string) (model.PreAuth, error)
 }
 
 type Handler struct {
-	Cfg     config.APIConfig
-	Server  *fiber.App
-	Service Service
+	Cfg       config.APIConfig
+	Server    *fiber.App
+	Service   Service
+	Validator utils.Validator
 }
 
 func Start(cfg config.APIConfig, service Service) error {
@@ -24,9 +33,10 @@ func Start(cfg config.APIConfig, service Service) error {
 	app := fiber.New()
 
 	h := &Handler{
-		Cfg:     cfg,
-		Server:  app,
-		Service: service,
+		Cfg:       cfg,
+		Server:    app,
+		Service:   service,
+		Validator: utils.NewValidator(),
 	}
 
 	h.SetupRoutes(h.Cfg)
@@ -35,7 +45,31 @@ func Start(cfg config.APIConfig, service Service) error {
 }
 
 func (h *Handler) AddPreAuth(c *fiber.Ctx) error {
-	return nil
+	req := PreauthReq{}
+	err := c.BodyParser(&req)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": ErrInvalidRequest,
+		})
+	}
+
+	err = h.Validator.Struct(req)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": ErrInvalidRequest,
+		})
+	}
+
+	err = h.Service.AddPreAuth(req.AccountID)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": AddPreAuthError,
+		})
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"message": AddPreAuthSuccess,
+	})
 }
 
 func (h *Handler) GetPreAuth(c *fiber.Ctx) error {

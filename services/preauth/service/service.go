@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"ivpn.net/auth/services/preauth/config"
+	"ivpn.net/auth/services/preauth/model"
 )
 
 type Cache interface {
@@ -26,8 +27,8 @@ func New(cfg config.Config, cache Cache) *Service {
 	}
 }
 
-func (s *Service) GetPreAuth(ID string) error {
-	return nil
+func (s *Service) GetPreAuth(ID string) (model.PreAuth, error) {
+	return model.PreAuth{}, nil
 }
 
 func (s *Service) AddPreAuth(accountId string) error {
