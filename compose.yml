@@ -21,16 +21,28 @@ services:
       server:
     volumes:
       - data:/app/data
-  
+
   distributor:
     build: ./services/distributor
     env_file: .env
     container_name: auth-distributor
     restart: unless-stopped
+    ports:
+      - ${DISTRIBUTOR_PORT}:${DISTRIBUTOR_PORT}
     networks:
       server:
     volumes:
       - data:/app/data
+
+  preauth:
+    build: ./services/preauth
+    env_file: .env
+    container_name: auth-preauth
+    restart: unless-stopped
+    ports:
+      - ${PREAUTH_PORT}:${PREAUTH_PORT}
+    networks:
+      server:
 
   db:
     image: mariadb
@@ -51,8 +63,18 @@ services:
     networks:
       server:
 
+  redis:
+    image: redis
+    container_name: auth-redis
+    restart: unless-stopped
+    volumes:
+      - redis:/data
+    networks:
+      server:
+
 volumes:
   db:
+  redis:
   data:
 
 networks:

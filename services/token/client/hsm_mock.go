@@ -24,7 +24,7 @@ func NewMockHSM() *MockHSM {
 
 func (h *MockHSM) Token(input string, ttlMinutes int) (*model.HSMToken, error) {
 	if input == "" {
-		return nil, fmt.Errorf(ErrEmptyInput)
+		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
 
 	// Generate a mock HSM secret key (in real HSM, this is securely stored and never exposed)

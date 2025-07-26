@@ -1,6 +1,6 @@
 module ivpn.net/auth/proto
 
-go 1.23.1
+go 1.24.5
 
 require (
 	google.golang.org/grpc v1.73.0
