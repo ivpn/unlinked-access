@@ -33,7 +33,8 @@ func (d *Database) GetAccountsMock(count int) ([]*model.Account, error) {
 			ID:          randomId(),
 			CreatedAt:   time.Now(),
 			IsActive:    true,
-			ActiveUntil: time.Now().AddDate(0, 1, 0), // Active for one month
+			ActiveUntil: time.Now().AddDate(0, 1, 0),   // Active for one month
+			Product:     "Tier " + string(rune(i%3+1)), // Mocking different tiers
 		}
 	}
 
