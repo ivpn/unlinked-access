@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -17,8 +18,8 @@ var (
 )
 
 type Service interface {
-	AddPreAuth(string) error
-	GetPreAuth(string) (model.PreAuth, error)
+	AddPreAuth(context.Context, string) error
+	GetPreAuth(context.Context, string) (model.PreAuth, error)
 }
 
 type Handler struct {
@@ -61,7 +62,7 @@ func (h *Handler) AddPreAuth(c *fiber.Ctx) error {
 		})
 	}
 
-	err = h.Service.AddPreAuth(req.AccountID)
+	err = h.Service.AddPreAuth(c.Context(), req.AccountID)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"error": AddPreAuthError,
@@ -80,12 +81,12 @@ func (h *Handler) GetPreAuth(c *fiber.Ctx) error {
 			"error": ErrInvalidRequest,
 		})
 	}
-	preAuth, err := h.Service.GetPreAuth(id)
+	pa, err := h.Service.GetPreAuth(c.Context(), id)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"error": GetPreAuthError,
 		})
 	}
 
-	return c.JSON(preAuth)
+	return c.JSON(pa)
 }
