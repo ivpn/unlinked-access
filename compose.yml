@@ -21,7 +21,7 @@ services:
       server:
     volumes:
       - data:/app/data
-  
+
   distributor:
     build: ./services/distributor
     env_file: .env
@@ -33,7 +33,7 @@ services:
       server:
     volumes:
       - data:/app/data
-  
+
   preauth:
     build: ./services/preauth
     env_file: .env
@@ -62,7 +62,7 @@ services:
       - db:/var/lib/mysql
     networks:
       server:
-  
+
   redis:
     image: redis
     container_name: auth-redis
