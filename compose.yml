@@ -63,6 +63,25 @@ services:
     networks:
       server:
 
+  client-db:
+    image: mariadb
+    container_name: auth-client-db
+    restart: unless-stopped
+    healthcheck:
+      test: "/usr/bin/mariadb --user=${CLIENT_DB_USER} --password=${CLIENT_DB_PASSWORD} --execute \"SHOW DATABASES;\""
+      interval: 2s
+      timeout: 10s
+      retries: 5
+    environment:
+      MYSQL_ROOT_PASSWORD: ${CLIENT_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${CLIENT_DB_NAME}
+      MYSQL_USER: ${CLIENT_DB_USER}
+      MYSQL_PASSWORD: ${CLIENT_DB_PASSWORD}
+    volumes:
+      - db:/var/lib/mysql
+    networks:
+      server:
+
   redis:
     image: redis
     container_name: auth-redis
@@ -79,4 +98,6 @@ volumes:
 
 networks:
   server:
+    driver: bridge
+  client:
     driver: bridge
