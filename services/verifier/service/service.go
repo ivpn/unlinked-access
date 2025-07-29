@@ -48,19 +48,25 @@ func (s *Service) Start() error {
 
 func (s *Service) SyncManifest() error {
 	log.Println("syncing manifest...")
-	manifest, err := s.GetManifest()
+	m, err := s.GetManifest()
 	if err != nil {
 		log.Printf("error syncing manifest: %v", err)
 		return err
 	}
 
-	err = VerifyManifest(manifest)
+	err = VerifyManifest(m)
 	if err != nil {
 		log.Printf("manifest verification failed: %v", err)
 		return err
 	}
 
-	log.Printf("manifest synced successfully: %v", manifest.ID)
+	err = s.UpdateSubscriptions(m)
+	if err != nil {
+		log.Printf("error updating subscriptions: %v", err)
+		return err
+	}
+
+	log.Printf("manifest synced successfully: %v", m.ID)
 
 	return nil
 }
@@ -73,16 +79,6 @@ func (s *Service) GetManifest() (model.Manifest, error) {
 	}
 
 	return manifest, nil
-}
-
-func (s *Service) GetSubscriptions() ([]model.Subscription, error) {
-	subs, err := s.Store.GetSubscriptions()
-	if err != nil {
-		log.Printf("error fetching subscriptions: %v", err)
-		return nil, err
-	}
-
-	return subs, nil
 }
 
 func VerifyManifest(m model.Manifest) error {
@@ -109,4 +105,41 @@ func VerifyManifest(m model.Manifest) error {
 	log.Println("manifest signature OK")
 
 	return nil
+}
+
+func (s *Service) UpdateSubscriptions(m model.Manifest) error {
+	subs, err := s.Store.GetSubscriptions()
+	if err != nil {
+		log.Printf("error fetching subscriptions: %v", err)
+		return err
+	}
+
+	for _, sub := range subs {
+		updatedSub, err := UpdateSubscriptionFromManifest(sub, m.Subscriptions)
+		if err != nil {
+			log.Printf("error updating subscription: %v", err)
+			return err
+		}
+
+		err = s.Store.UpdateSubscription(updatedSub)
+		if err != nil {
+			log.Printf("error saving updated subscription: %v", err)
+			return err
+		}
+	}
+
+	return nil
+}
+
+func UpdateSubscriptionFromManifest(sub model.Subscription, manifestSubs []model.Subscription) (model.Subscription, error) {
+	for _, s := range manifestSubs {
+		if sub.TokenHash == s.TokenHash {
+			sub.IsActive = s.IsActive
+			sub.ActiveUntil = s.ActiveUntil
+			sub.Tier = s.Tier
+			return sub, nil
+		}
+	}
+
+	return model.Subscription{}, fmt.Errorf("subscription with TokenHash %s not found", sub.TokenHash)
 }
