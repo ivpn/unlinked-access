@@ -1,6 +1,10 @@
 package service
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/jasonlvhit/gocron"
@@ -43,6 +47,12 @@ func (s *Service) SyncManifest() error {
 		return err
 	}
 
+	err = VerifyManifest(manifest)
+	if err != nil {
+		log.Printf("manifest verification failed: %v", err)
+		return err
+	}
+
 	log.Printf("manifest synced successfully: %v", manifest.ID)
 
 	return nil
@@ -56,4 +66,30 @@ func (s *Service) GetManifest() (model.Manifest, error) {
 	}
 
 	return manifest, nil
+}
+
+func VerifyManifest(m model.Manifest) error {
+	// TODO: Implement HSM verification
+	log.Printf("verifying manifest: %v", m.ID)
+
+	signature := m.Signature
+	m.Signature = ""
+
+	data, err := json.Marshal(m)
+	if err != nil {
+		log.Println("error marshaling manifest for signing:", err)
+		return err
+	}
+
+	hash := sha256.Sum256(data)
+	hashString := base64.StdEncoding.EncodeToString(hash[:])
+
+	if hashString != signature {
+		log.Printf("manifest signature does not match: %v != %v", hashString, signature)
+		return fmt.Errorf("invalid manifest signature")
+	}
+
+	log.Println("manifest signature OK")
+
+	return nil
 }
