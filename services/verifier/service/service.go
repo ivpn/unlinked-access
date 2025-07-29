@@ -13,12 +13,19 @@ import (
 	"ivpn.net/auth/services/verifier/model"
 )
 
-type Service struct {
-	Http http.Http
+type Store interface {
+	GetSubscriptions() ([]model.Subscription, error)
+	UpdateSubscription(model.Subscription) error
 }
 
-func New(cfg config.Config) *Service {
+type Service struct {
+	Store Store
+	Http  http.Http
+}
+
+func New(cfg config.Config, store Store) *Service {
 	return &Service{
+		Store: store,
 		Http: http.Http{
 			Cfg: cfg.API,
 		},
@@ -66,6 +73,16 @@ func (s *Service) GetManifest() (model.Manifest, error) {
 	}
 
 	return manifest, nil
+}
+
+func (s *Service) GetSubscriptions() ([]model.Subscription, error) {
+	subs, err := s.Store.GetSubscriptions()
+	if err != nil {
+		log.Printf("error fetching subscriptions: %v", err)
+		return nil, err
+	}
+
+	return subs, nil
 }
 
 func VerifyManifest(m model.Manifest) error {
