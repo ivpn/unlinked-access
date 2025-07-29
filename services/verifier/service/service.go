@@ -37,7 +37,7 @@ func (s *Service) Start() error {
 
 	err := gocron.Every(1).Minute().Do(s.SyncManifest)
 	if err != nil {
-		log.Printf("error fetching manifest: %v", err)
+		log.Printf("error syncing manifest: %v", err)
 	}
 
 	// Start all the pending jobs
@@ -50,19 +50,16 @@ func (s *Service) SyncManifest() error {
 	log.Println("syncing manifest...")
 	m, err := s.GetManifest()
 	if err != nil {
-		log.Printf("error syncing manifest: %v", err)
 		return err
 	}
 
 	err = VerifyManifest(m)
 	if err != nil {
-		log.Printf("manifest verification failed: %v", err)
 		return err
 	}
 
 	err = s.UpdateSubscriptions(m)
 	if err != nil {
-		log.Printf("error updating subscriptions: %v", err)
 		return err
 	}
 
