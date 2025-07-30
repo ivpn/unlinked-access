@@ -43,6 +43,14 @@ services:
       - ${PREAUTH_PORT}:${PREAUTH_PORT}
     networks:
       server:
+  
+  verifier:
+    build: ./services/verifier
+    env_file: .env
+    container_name: auth-verifier
+    restart: unless-stopped
+    networks:
+      client:
 
   server-db:
     image: mariadb
@@ -80,7 +88,7 @@ services:
     volumes:
       - db:/var/lib/mysql
     networks:
-      server:
+      client:
 
   redis:
     image: redis
