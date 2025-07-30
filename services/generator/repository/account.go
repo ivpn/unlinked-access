@@ -41,6 +41,29 @@ func (d *Database) GetAccountsMock(count int) ([]*model.Account, error) {
 	return accounts, nil
 }
 
+func (d *Database) CreateAccountsMock(count int) error {
+	accounts, err := d.GetAccountsMock(count)
+	if err != nil {
+		log.Printf("error generating mock accounts: %v", err)
+		return err
+	}
+
+	for _, account := range accounts {
+		err := d.PostAccount(account)
+		if err != nil {
+			log.Printf("error posting mock account %s: %v", account.ID, err)
+			return err
+		}
+		log.Printf("mock account created: %s", account.ID)
+	}
+
+	return nil
+}
+
+func (d *Database) PostAccount(account *model.Account) error {
+	return d.Client.Create(account).Error
+}
+
 func randomId() string {
 	// Generate a random ID, e.g., i-1234-ABCD-XYQZ
 	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"

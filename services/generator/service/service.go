@@ -24,6 +24,7 @@ const STALE_DAYS = 1
 type Store interface {
 	GetAccounts() ([]*model.Account, error)
 	GetAccountsMock(int) ([]*model.Account, error)
+	CreateAccountsMock(int) error
 }
 
 type TokenClient interface {
