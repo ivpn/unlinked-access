@@ -44,20 +44,39 @@ services:
     networks:
       server:
 
-  db:
+  server-db:
     image: mariadb
-    container_name: auth-db
+    container_name: auth-server-db
     restart: unless-stopped
     healthcheck:
-      test: "/usr/bin/mariadb --user=${DB_USER} --password=${DB_PASSWORD} --execute \"SHOW DATABASES;\""
+      test: "/usr/bin/mariadb --user=${SERVER_DB_USER} --password=${SERVER_DB_PASSWORD} --execute \"SHOW DATABASES;\""
       interval: 2s
       timeout: 10s
       retries: 5
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${SERVER_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${SERVER_DB_NAME}
+      MYSQL_USER: ${SERVER_DB_USER}
+      MYSQL_PASSWORD: ${SERVER_DB_PASSWORD}
+    volumes:
+      - db:/var/lib/mysql
+    networks:
+      server:
+
+  client-db:
+    image: mariadb
+    container_name: auth-client-db
+    restart: unless-stopped
+    healthcheck:
+      test: "/usr/bin/mariadb --user=${CLIENT_DB_USER} --password=${CLIENT_DB_PASSWORD} --execute \"SHOW DATABASES;\""
+      interval: 2s
+      timeout: 10s
+      retries: 5
+    environment:
+      MYSQL_ROOT_PASSWORD: ${CLIENT_DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${CLIENT_DB_NAME}
+      MYSQL_USER: ${CLIENT_DB_USER}
+      MYSQL_PASSWORD: ${CLIENT_DB_PASSWORD}
     volumes:
       - db:/var/lib/mysql
     networks:
@@ -79,4 +98,6 @@ volumes:
 
 networks:
   server:
+    driver: bridge
+  client:
     driver: bridge

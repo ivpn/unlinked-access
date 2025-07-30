@@ -180,6 +180,7 @@ func SaveManifest(m *model.Manifest) error {
 }
 
 func SignManifest(m *model.Manifest) error {
+	// TODO: Implement HSM signing
 	log.Println("signing manifest...")
 
 	data, err := json.Marshal(m)
