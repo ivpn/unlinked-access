@@ -14,6 +14,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jasonlvhit/gocron"
+	"ivpn.net/auth/services/generator/config"
 	"ivpn.net/auth/services/generator/model"
 )
 
@@ -32,12 +33,14 @@ type TokenClient interface {
 }
 
 type Service struct {
+	Cfg   config.Config
 	Store Store
 	Token TokenClient
 }
 
-func New(store Store, tokenClient TokenClient) *Service {
+func New(cfg config.Config, store Store, tokenClient TokenClient) *Service {
 	return &Service{
+		Cfg:   cfg,
 		Store: store,
 		Token: tokenClient,
 	}
@@ -46,14 +49,17 @@ func New(store Store, tokenClient TokenClient) *Service {
 func (s *Service) Start() error {
 	log.Println("generator service started")
 
+	if s.Cfg.Service.SampleData {
+		err := s.Store.CreateAccountsMock(25)
+		if err != nil {
+			log.Printf("error creating mock accounts: %v", err)
+			return err
+		}
+	}
+
 	err := gocron.Every(1).Minute().Do(s.Generate)
 	if err != nil {
 		log.Printf("error scheduling manifest generation: %v", err)
-	}
-
-	err = gocron.Every(1).Minute().Do(RemoveStaleManifests(BASE_PATH))
-	if err != nil {
-		log.Printf("error scheduling manifest cleanup: %v", err)
 	}
 
 	// Start all the pending jobs
@@ -198,7 +204,7 @@ func SignManifest(m *model.Manifest) error {
 	return nil
 }
 
-func RemoveStaleManifests(dir string) error {
+func (s *Service) RemoveStaleManifests(dir string) error {
 	files, err := os.ReadDir(dir)
 	if err != nil {
 		return fmt.Errorf("failed to read manifest directory: %w", err)

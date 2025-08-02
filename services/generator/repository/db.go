@@ -7,16 +7,24 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"ivpn.net/auth/services/generator/config"
+	"ivpn.net/auth/services/generator/model"
 )
 
 type Database struct {
 	Client *gorm.DB
 }
 
-func NewDB(cfg config.DBConfig) (*Database, error) {
-	db, err := connect(cfg)
+func NewDB(cfg config.Config) (*Database, error) {
+	db, err := connect(cfg.DB)
 	if err != nil {
 		return nil, err
+	}
+
+	if cfg.Service.SampleData {
+		err = migrate(db)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return &Database{
@@ -48,4 +56,17 @@ func connect(cfg config.DBConfig) (*gorm.DB, error) {
 	log.Println("DB connection OK")
 
 	return db, nil
+}
+
+func migrate(db *gorm.DB) error {
+	err := db.AutoMigrate(
+		&model.Account{},
+	)
+	if err != nil {
+		return err
+	}
+
+	log.Println("DB migration OK")
+
+	return nil
 }

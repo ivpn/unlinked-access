@@ -2,6 +2,7 @@ package repository
 
 import (
 	"crypto/rand"
+	"fmt"
 	"log"
 	"math/big"
 	"strings"
@@ -33,8 +34,8 @@ func (d *Database) GetAccountsMock(count int) ([]*model.Account, error) {
 			ID:          randomId(),
 			CreatedAt:   time.Now(),
 			IsActive:    true,
-			ActiveUntil: time.Now().AddDate(0, 1, 0),   // Active for one month
-			Product:     "Tier " + string(rune(i%3+1)), // Mocking different tiers
+			ActiveUntil: time.Now().AddDate(0, i%12+1, 0), // Active for x months
+			Product:     fmt.Sprintf("Tier %d", i%3+1),    // Mocking different tiers
 		}
 	}
 
