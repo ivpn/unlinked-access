@@ -15,7 +15,7 @@ services:
     container_name: auth-generator
     restart: unless-stopped
     depends_on:
-      db:
+      server-db:
         condition: service_healthy
     networks:
       server:
