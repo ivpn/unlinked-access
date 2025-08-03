@@ -15,9 +15,14 @@ type TokenServerConfig struct {
 	Port string
 }
 
+type ServiceConfig struct {
+	SampleData bool
+}
+
 type Config struct {
 	TokenServer TokenServerConfig
 	DB          DBConfig
+	Service     ServiceConfig
 }
 
 func New() (Config, error) {
@@ -27,11 +32,14 @@ func New() (Config, error) {
 			Port: os.Getenv("TOKEN_PORT"),
 		},
 		DB: DBConfig{
-			Host:     os.Getenv("DB_HOST"),
-			Port:     os.Getenv("DB_PORT"),
-			Name:     os.Getenv("DB_NAME"),
-			User:     os.Getenv("DB_USER"),
-			Password: os.Getenv("DB_PASSWORD"),
+			Host:     os.Getenv("SERVER_DB_HOST"),
+			Port:     os.Getenv("SERVER_DB_PORT"),
+			Name:     os.Getenv("SERVER_DB_NAME"),
+			User:     os.Getenv("SERVER_DB_USER"),
+			Password: os.Getenv("SERVER_DB_PASSWORD"),
+		},
+		Service: ServiceConfig{
+			SampleData: os.Getenv("SAMPLE_DATA") == "true",
 		},
 	}, nil
 }

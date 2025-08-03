@@ -2,6 +2,7 @@ package repository
 
 import (
 	"crypto/rand"
+	"fmt"
 	"log"
 	"math/big"
 	"strings"
@@ -33,12 +34,35 @@ func (d *Database) GetAccountsMock(count int) ([]*model.Account, error) {
 			ID:          randomId(),
 			CreatedAt:   time.Now(),
 			IsActive:    true,
-			ActiveUntil: time.Now().AddDate(0, 1, 0),   // Active for one month
-			Product:     "Tier " + string(rune(i%3+1)), // Mocking different tiers
+			ActiveUntil: time.Now().AddDate(0, i%12+1, 0), // Active for x months
+			Product:     fmt.Sprintf("Tier %d", i%3+1),    // Mocking different tiers
 		}
 	}
 
 	return accounts, nil
+}
+
+func (d *Database) CreateAccountsMock(count int) error {
+	accounts, err := d.GetAccountsMock(count)
+	if err != nil {
+		log.Printf("error generating mock accounts: %v", err)
+		return err
+	}
+
+	for _, account := range accounts {
+		err := d.PostAccount(account)
+		if err != nil {
+			log.Printf("error posting mock account %s: %v", account.ID, err)
+			return err
+		}
+		log.Printf("mock account created: %s", account.ID)
+	}
+
+	return nil
+}
+
+func (d *Database) PostAccount(account *model.Account) error {
+	return d.Client.Create(account).Error
 }
 
 func randomId() string {

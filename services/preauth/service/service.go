@@ -57,7 +57,7 @@ func (s *Service) GetPreAuth(ctx context.Context, ID string) (model.PreAuth, err
 	return retrieved, nil
 }
 
-func (s *Service) AddPreAuth(ctx context.Context, accountId string) error {
+func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive bool, activeUntil time.Time, tier string) error {
 	// Generate token
 	accountIDHash := sha512.Sum512([]byte(accountId))
 	token, err := s.Token.GenerateToken(string(accountIDHash[:]))
@@ -69,8 +69,11 @@ func (s *Service) AddPreAuth(ctx context.Context, accountId string) error {
 	// Create an instance of PreAuth
 	tokenHash := sha256.Sum256([]byte(token))
 	pa := model.PreAuth{
-		ID:        uuid.New().String(),
-		TokenHash: string(tokenHash[:]),
+		ID:          uuid.New().String(),
+		TokenHash:   string(tokenHash[:]),
+		IsActive:    isActive,
+		ActiveUntil: activeUntil,
+		Tier:        tier,
 	}
 
 	// Marshal the struct to JSON

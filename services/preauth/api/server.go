@@ -3,7 +3,9 @@ package api
 import (
 	"context"
 	"log"
+	"time"
 
+	"github.com/araddon/dateparse"
 	"github.com/gofiber/fiber/v2"
 	"ivpn.net/auth/services/preauth/config"
 	"ivpn.net/auth/services/preauth/model"
@@ -18,7 +20,7 @@ var (
 )
 
 type Service interface {
-	AddPreAuth(context.Context, string) error
+	AddPreAuth(context.Context, string, bool, time.Time, string) error
 	GetPreAuth(context.Context, string) (model.PreAuth, error)
 }
 
@@ -62,7 +64,14 @@ func (h *Handler) AddPreAuth(c *fiber.Ctx) error {
 		})
 	}
 
-	err = h.Service.AddPreAuth(c.Context(), req.AccountID)
+	activeUntil, err := dateparse.ParseAny(req.ActiveUntil)
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error": ErrInvalidRequest,
+		})
+	}
+
+	err = h.Service.AddPreAuth(c.Context(), req.AccountID, req.IsActive, activeUntil, req.Tier)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"error": AddPreAuthError,

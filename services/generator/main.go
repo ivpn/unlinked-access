@@ -15,7 +15,7 @@ func main() {
 		log.Println(err)
 	}
 
-	db, err := repository.NewDB(cfg.DB)
+	db, err := repository.NewDB(cfg)
 	if err != nil {
 		log.Println(err)
 	}
@@ -25,7 +25,7 @@ func main() {
 		log.Println(err)
 	}
 
-	service := service.New(db, tokenClient)
+	service := service.New(cfg, db, tokenClient)
 	err = service.Start()
 	if err != nil {
 		log.Println(err)
