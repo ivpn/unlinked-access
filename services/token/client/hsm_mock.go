@@ -11,11 +11,6 @@ import (
 	"ivpn.net/auth/services/token/model"
 )
 
-var (
-	ErrEmptyInput    = "input string cannot be empty"
-	ErrGenerateToken = "failed to generate token"
-)
-
 type MockHSM struct{}
 
 func NewMockHSM() *MockHSM {

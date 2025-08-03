@@ -14,7 +14,7 @@ func main() {
 		log.Println(err)
 	}
 
-	hsm := client.NewMockHSM()
+	hsm := client.NewHSM()
 
 	server := service.New(hsm, cfg)
 	err = server.Start()
