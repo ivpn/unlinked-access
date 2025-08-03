@@ -57,13 +57,13 @@ func (s *Service) GetPreAuth(ctx context.Context, ID string) (model.PreAuth, err
 	return retrieved, nil
 }
 
-func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive bool, activeUntil time.Time, tier string) error {
+func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive bool, activeUntil time.Time, tier string) (model.PreAuth, error) {
 	// Generate token
 	accountIDHash := sha512.Sum512([]byte(accountId))
 	token, err := s.Token.GenerateToken(string(accountIDHash[:]))
 	if err != nil {
 		log.Println("failed to generate token:", err)
-		return err
+		return model.PreAuth{}, err
 	}
 
 	// Create an instance of PreAuth
@@ -80,15 +80,15 @@ func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive boo
 	data, err := json.Marshal(pa)
 	if err != nil {
 		log.Println("failed to marshal pre-auth to JSON:", err)
-		return err
+		return model.PreAuth{}, err
 	}
 
 	// Set in Redis
 	err = s.Cache.Set(ctx, "preauth_"+pa.ID, string(data), s.Cfg.API.PreauthTTL)
 	if err != nil {
 		log.Println("failed to set pre-auth in cache:", err)
-		return err
+		return model.PreAuth{}, err
 	}
 
-	return nil
+	return pa, nil
 }

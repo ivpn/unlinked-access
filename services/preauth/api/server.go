@@ -13,14 +13,13 @@ import (
 )
 
 var (
-	ErrInvalidRequest = "The request is invalid."
-	AddPreAuthSuccess = "Pre-authentication added successfully."
-	AddPreAuthError   = "Failed to add pre-authentication."
-	GetPreAuthError   = "Failed to retrieve pre-authentication."
+	ErrInvalidRequest = "the request is invalid."
+	AddPreAuthError   = "failed to add pre-authentication."
+	GetPreAuthError   = "failed to retrieve pre-authentication."
 )
 
 type Service interface {
-	AddPreAuth(context.Context, string, bool, time.Time, string) error
+	AddPreAuth(context.Context, string, bool, time.Time, string) (model.PreAuth, error)
 	GetPreAuth(context.Context, string) (model.PreAuth, error)
 }
 
@@ -71,16 +70,14 @@ func (h *Handler) AddPreAuth(c *fiber.Ctx) error {
 		})
 	}
 
-	err = h.Service.AddPreAuth(c.Context(), req.AccountID, req.IsActive, activeUntil, req.Tier)
+	pa, err := h.Service.AddPreAuth(c.Context(), req.AccountID, req.IsActive, activeUntil, req.Tier)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"error": AddPreAuthError,
 		})
 	}
 
-	return c.Status(200).JSON(fiber.Map{
-		"message": AddPreAuthSuccess,
-	})
+	return c.JSON(pa)
 }
 
 func (h *Handler) GetPreAuth(c *fiber.Ctx) error {
