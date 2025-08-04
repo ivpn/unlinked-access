@@ -115,13 +115,13 @@ func (s *Service) UpdateSubscriptions(m model.Manifest) error {
 		updatedSub, err := UpdateSubscriptionFromManifest(sub, m.Subscriptions)
 		if err != nil {
 			log.Printf("error updating subscription: %v", err)
-			return err
+			continue
 		}
 
 		err = s.Store.UpdateSubscription(updatedSub)
 		if err != nil {
 			log.Printf("error saving updated subscription: %v", err)
-			return err
+			continue
 		}
 	}
 
