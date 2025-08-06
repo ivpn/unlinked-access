@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"crypto/sha512"
+	"encoding/base64"
 	"encoding/json"
 	"log"
 	"time"
@@ -60,7 +61,7 @@ func (s *Service) GetPreAuth(ctx context.Context, ID string) (model.PreAuth, err
 func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive bool, activeUntil time.Time, tier string) (model.PreAuth, error) {
 	// Generate token
 	accountIDHash := sha512.Sum512([]byte(accountId))
-	token, err := s.Token.GenerateToken(string(accountIDHash[:]))
+	token, err := s.Token.GenerateToken(base64.StdEncoding.EncodeToString(accountIDHash[:]))
 	if err != nil {
 		log.Println("failed to generate token:", err)
 		return model.PreAuth{}, err
@@ -70,7 +71,7 @@ func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive boo
 	tokenHash := sha256.Sum256([]byte(token))
 	pa := model.PreAuth{
 		ID:          uuid.New().String(),
-		TokenHash:   string(tokenHash[:]),
+		TokenHash:   base64.StdEncoding.EncodeToString(tokenHash[:]),
 		IsActive:    isActive,
 		ActiveUntil: activeUntil,
 		Tier:        tier,

@@ -51,6 +51,7 @@ func (h *Handler) AddPreAuth(c *fiber.Ctx) error {
 	req := PreauthReq{}
 	err := c.BodyParser(&req)
 	if err != nil {
+		log.Println("failed to parse request body:", err)
 		return c.Status(400).JSON(fiber.Map{
 			"error": ErrInvalidRequest,
 		})
@@ -58,6 +59,7 @@ func (h *Handler) AddPreAuth(c *fiber.Ctx) error {
 
 	err = h.Validator.Struct(req)
 	if err != nil {
+		log.Println("failed to validate request body:", err)
 		return c.Status(400).JSON(fiber.Map{
 			"error": ErrInvalidRequest,
 		})
@@ -65,6 +67,7 @@ func (h *Handler) AddPreAuth(c *fiber.Ctx) error {
 
 	activeUntil, err := dateparse.ParseAny(req.ActiveUntil)
 	if err != nil {
+		log.Println("failed to parse ActiveUntil:", err)
 		return c.Status(400).JSON(fiber.Map{
 			"error": ErrInvalidRequest,
 		})
@@ -72,6 +75,7 @@ func (h *Handler) AddPreAuth(c *fiber.Ctx) error {
 
 	pa, err := h.Service.AddPreAuth(c.Context(), req.AccountID, req.IsActive, activeUntil, req.Tier)
 	if err != nil {
+		log.Println("failed to add pre-authentication:", err)
 		return c.Status(400).JSON(fiber.Map{
 			"error": AddPreAuthError,
 		})
@@ -83,12 +87,14 @@ func (h *Handler) AddPreAuth(c *fiber.Ctx) error {
 func (h *Handler) GetPreAuth(c *fiber.Ctx) error {
 	id := c.Params("id")
 	if !utils.ValidateUUID(id) {
+		log.Println("invalid UUID format:", id)
 		return c.Status(400).JSON(fiber.Map{
 			"error": ErrInvalidRequest,
 		})
 	}
 	pa, err := h.Service.GetPreAuth(c.Context(), id)
 	if err != nil {
+		log.Println("failed to retrieve pre-authentication:", err)
 		return c.Status(400).JSON(fiber.Map{
 			"error": GetPreAuthError,
 		})
