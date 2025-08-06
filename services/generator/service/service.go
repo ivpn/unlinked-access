@@ -135,7 +135,7 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 	subscriptions := make([]model.Subscription, len(accounts))
 	for i, account := range accounts {
 		accountIDHash := sha512.Sum512([]byte(account.ID))
-		token, err := s.Token.GenerateToken(string(accountIDHash[:]))
+		token, err := s.Token.GenerateToken(base64.StdEncoding.EncodeToString(accountIDHash[:]))
 		if err != nil {
 			log.Printf("error generating token for account %s: %v", account.ID, err)
 			continue
@@ -144,7 +144,7 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 		tokenHash := sha256.Sum256([]byte(token))
 
 		subscriptions[i] = model.Subscription{
-			TokenHash:   string(tokenHash[:]),
+			TokenHash:   base64.StdEncoding.EncodeToString(tokenHash[:]),
 			IsActive:    account.IsActive,
 			ActiveUntil: account.ActiveUntil,
 			Tier:        account.Product,
