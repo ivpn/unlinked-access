@@ -49,6 +49,9 @@ services:
     env_file: .env
     container_name: auth-verifier
     restart: unless-stopped
+    depends_on:
+      client-db:
+        condition: service_healthy
     networks:
       client:
 
@@ -86,7 +89,7 @@ services:
       MYSQL_USER: ${CLIENT_DB_USER}
       MYSQL_PASSWORD: ${CLIENT_DB_PASSWORD}
     volumes:
-      - db:/var/lib/mysql
+      - db-client:/var/lib/mysql
     networks:
       client:
 
@@ -101,6 +104,7 @@ services:
 
 volumes:
   db:
+  db-client:
   redis:
   data:
 
