@@ -2,6 +2,7 @@ package client
 
 import (
 	"crypto/sha512"
+	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -29,7 +30,7 @@ func (h *HSM) Token(input string, ttlMinutes int) (*model.HSMToken, error) {
 	expiresAt := time.Now().Add(time.Duration(ttlMinutes) * time.Minute)
 
 	return &model.HSMToken{
-		Token:     string(inputHash[:]),
+		Token:     base64.StdEncoding.EncodeToString(inputHash[:]),
 		ExpiresAt: expiresAt,
 	}, nil
 }
