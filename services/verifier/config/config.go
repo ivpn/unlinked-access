@@ -17,9 +17,14 @@ type DBConfig struct {
 	Password string
 }
 
+type ServiceConfig struct {
+	SampleData bool
+}
+
 type Config struct {
-	API APIConfig
-	DB  DBConfig
+	API     APIConfig
+	DB      DBConfig
+	Service ServiceConfig
 }
 
 func New() (Config, error) {
@@ -34,6 +39,9 @@ func New() (Config, error) {
 			Name:     os.Getenv("CLIENT_DB_NAME"),
 			User:     os.Getenv("CLIENT_DB_USER"),
 			Password: os.Getenv("CLIENT_DB_PASSWORD"),
+		},
+		Service: ServiceConfig{
+			SampleData: os.Getenv("SAMPLE_DATA") == "true",
 		},
 	}, nil
 }

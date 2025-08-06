@@ -14,7 +14,7 @@ func main() {
 		log.Println(err)
 	}
 
-	db, err := repository.NewDB(cfg.DB)
+	db, err := repository.NewDB(cfg)
 	if err != nil {
 		log.Println(err)
 	}
