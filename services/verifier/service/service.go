@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/jasonlvhit/gocron"
 	"ivpn.net/auth/services/verifier/client/http"
@@ -97,6 +98,11 @@ func VerifyManifest(m model.Manifest) error {
 	if hashString != signature {
 		log.Printf("manifest signature does not match: %v != %v", hashString, signature)
 		return fmt.Errorf("invalid manifest signature")
+	}
+
+	if m.ValidUntil.Before(time.Now()) {
+		log.Printf("manifest is expired: %v", m.ValidUntil)
+		return fmt.Errorf("manifest is expired")
 	}
 
 	log.Println("manifest signature OK")
