@@ -12,8 +12,8 @@ func (d *Database) GetSubscriptions() ([]model.Subscription, error) {
 
 func (d *Database) UpdateSubscription(s model.Subscription) error {
 	return d.Client.Model(&s).Updates(map[string]any{
-		"a": s.IsActive,
-		"u": s.ActiveUntil,
-		"t": s.Tier,
+		"is_active":    s.IsActive,
+		"active_until": s.ActiveUntil,
+		"tier":         s.Tier,
 	}).Error
 }

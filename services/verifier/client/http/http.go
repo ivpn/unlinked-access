@@ -25,6 +25,7 @@ func (h Http) GetManifest() (model.Manifest, error) {
 	req := fiber.Get(h.Cfg.ManifestURL)
 	req.Set("Accept-Encoding", "gzip")
 	req.Set("Authorization", "Bearer "+h.Cfg.ManifestPSK)
+	req.Set("Accept", "application/json")
 
 	status, body, errs := req.Bytes()
 	if len(errs) > 0 || status != fiber.StatusOK {
