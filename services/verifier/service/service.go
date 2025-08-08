@@ -17,6 +17,7 @@ import (
 type Store interface {
 	GetSubscriptions() ([]model.Subscription, error)
 	UpdateSubscription(model.Subscription) error
+	UpdateSubscriptions([]model.Subscription) error
 }
 
 type Service struct {
@@ -36,7 +37,7 @@ func New(cfg config.Config, store Store) *Service {
 func (s *Service) Start() error {
 	log.Println("verifier service started")
 
-	err := gocron.Every(1).Minute().Do(s.SyncManifest)
+	err := gocron.Every(1).Hour().Do(s.SyncManifest)
 	if err != nil {
 		log.Printf("error syncing manifest: %v", err)
 	}
@@ -117,18 +118,20 @@ func (s *Service) UpdateSubscriptions(m model.Manifest) error {
 		return err
 	}
 
-	for _, sub := range subs {
+	for i, sub := range subs {
 		updatedSub, err := UpdateSubscriptionFromManifest(sub, m.Subscriptions)
 		if err != nil {
 			log.Printf("error updating subscription: %v", err)
 			continue
 		}
 
-		err = s.Store.UpdateSubscription(updatedSub)
-		if err != nil {
-			log.Printf("error saving updated subscription: %v", err)
-			continue
-		}
+		subs[i] = updatedSub
+	}
+
+	err = s.Store.UpdateSubscriptions(subs)
+	if err != nil {
+		log.Printf("error saving updated subscriptions: %v", err)
+		return err
 	}
 
 	return nil
