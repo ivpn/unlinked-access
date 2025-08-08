@@ -56,7 +56,7 @@ func (s *Service) Start() error {
 		}
 	}
 
-	err := gocron.Every(1).Minute().Do(s.Generate)
+	err := gocron.Every(1).Hour().Do(s.Generate)
 	if err != nil {
 		log.Printf("error scheduling manifest generation: %v", err)
 	}
