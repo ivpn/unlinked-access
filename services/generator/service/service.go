@@ -24,7 +24,6 @@ const STALE_DAYS = 1
 
 type Store interface {
 	GetAccounts() ([]*model.Account, error)
-	GetAccountsMock(int) ([]*model.Account, error)
 	CreateAccountsMock(int) error
 }
 
@@ -114,7 +113,7 @@ func (s *Service) CreateManifest() (*model.Manifest, error) {
 }
 
 func (s *Service) GetAccounts() ([]*model.Account, error) {
-	accounts, err := s.Store.GetAccountsMock(10)
+	accounts, err := s.Store.GetAccounts()
 	if err != nil {
 		log.Printf("error fetching accounts: %v", err)
 		return nil, err
