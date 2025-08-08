@@ -54,6 +54,7 @@ services:
         condition: service_healthy
     networks:
       client:
+      server:
 
   server-db:
     image: mariadb
