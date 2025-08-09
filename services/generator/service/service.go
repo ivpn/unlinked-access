@@ -61,6 +61,11 @@ func (s *Service) Start() error {
 		log.Printf("error scheduling manifest generation: %v", err)
 	}
 
+	err = gocron.Every(1).Hour().Do(s.RemoveStaleManifests)
+	if err != nil {
+		log.Printf("error scheduling stale manifest removal: %v", err)
+	}
+
 	// Start all the pending jobs
 	<-gocron.Start()
 
@@ -203,8 +208,10 @@ func SignManifest(m *model.Manifest) error {
 	return nil
 }
 
-func (s *Service) RemoveStaleManifests(dir string) error {
-	files, err := os.ReadDir(dir)
+func (s *Service) RemoveStaleManifests() error {
+	log.Println("deleting stale manifests...")
+
+	files, err := os.ReadDir(BASE_PATH)
 	if err != nil {
 		return fmt.Errorf("failed to read manifest directory: %w", err)
 	}
@@ -228,7 +235,7 @@ func (s *Service) RemoveStaleManifests(dir string) error {
 		}
 
 		if timestamp.Before(cutoff) {
-			fullPath := filepath.Join(dir, name)
+			fullPath := filepath.Join(BASE_PATH, name)
 			if err := os.Remove(fullPath); err != nil {
 				fmt.Printf("failed to delete old manifest %s: %v\n", name, err)
 			} else {
