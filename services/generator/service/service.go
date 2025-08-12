@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
@@ -9,17 +10,25 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jasonlvhit/gocron"
+	"golang.org/x/time/rate"
 	"ivpn.net/auth/services/generator/config"
 	"ivpn.net/auth/services/generator/model"
 )
 
-const CURRENT_MANIFEST = "current.json"
-const BASE_PATH = "/app/data"
-const STALE_DAYS = 1
+// Configuration
+const (
+	currentManifest = "current.json"
+	basePath        = "/app/data"
+	staleDays       = 1
+	targetTPS       = 10 // total across all goroutines
+	burst           = 1  // allowable burst above targetTPS
+	workerCount     = 4  // number of signing goroutines
+)
 
 type Store interface {
 	GetAccounts() ([]*model.Account, error)
@@ -135,25 +144,66 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 		return nil, err
 	}
 
-	subscriptions := make([]model.Subscription, len(accounts))
-	for i, account := range accounts {
-		token, err := s.Token.GenerateToken(account.ID)
-		if err != nil {
-			log.Printf("error generating token for account %s: %v", account.ID, err)
-			continue
-		}
+	ctx := context.Background()
+	limiter := rate.NewLimiter(rate.Limit(targetTPS), burst)
+	jobs := make(chan *model.Account, len(accounts))
+	results := make(chan model.Subscription, len(accounts))
+	var wg sync.WaitGroup
 
-		tokenHash := sha256.Sum256([]byte(token))
+	// Start workers
+	for w := 0; w < workerCount; w++ {
+		wg.Add(1)
+		go func(workerID int) {
+			defer wg.Done()
+			for account := range jobs {
+				// Wait for limiter before each Sign call
+				if err := limiter.Wait(ctx); err != nil {
+					log.Printf("[worker %d] limiter error: %v", workerID, err)
+					continue
+				}
 
-		subscriptions[i] = model.Subscription{
-			TokenHash:   base64.StdEncoding.EncodeToString(tokenHash[:]),
-			IsActive:    account.IsActive,
-			ActiveUntil: account.ActiveUntil,
-			Tier:        account.Product,
-		}
+				// Generate token for account ID
+				token, err := s.Token.GenerateToken(account.ID)
+				if err != nil {
+					log.Printf("error generating token for account %s: %v", account.ID, err)
+					continue
+				}
+
+				// Hash the token
+				tokenHash := sha256.Sum256([]byte(token))
+
+				// Send the subscription result to the channel
+				results <- model.Subscription{
+					TokenHash:   base64.StdEncoding.EncodeToString(tokenHash[:]),
+					IsActive:    account.IsActive,
+					ActiveUntil: account.ActiveUntil,
+					Tier:        account.Product,
+				}
+			}
+		}(w)
 	}
 
-	return subscriptions, nil
+	start := time.Now()
+
+	// Send jobs
+	for _, account := range accounts {
+		jobs <- account
+	}
+	close(jobs)
+
+	// Wait for workers to finish
+	wg.Wait()
+	close(results)
+
+	// Collect results
+	signedSubs := make([]model.Subscription, 0, len(accounts))
+	for sub := range results {
+		signedSubs = append(signedSubs, sub)
+	}
+
+	log.Printf("signed %d subscriptions in %s with %d workers (limit: %d TPS)\n", len(signedSubs), time.Since(start), workerCount, targetTPS)
+
+	return signedSubs, nil
 }
 
 func SaveManifest(m *model.Manifest) error {
@@ -167,9 +217,9 @@ func SaveManifest(m *model.Manifest) error {
 	}
 
 	timestamp := time.Now().Format("2006-01-02T15-04-05")
-	basePath := BASE_PATH
+	basePath := basePath
 	timestampFile := fmt.Sprintf("%s/%s.json", basePath, timestamp)
-	currentFile := fmt.Sprintf("%s/%s", basePath, CURRENT_MANIFEST)
+	currentFile := fmt.Sprintf("%s/%s", basePath, currentManifest)
 
 	// Write both files
 	if err := os.WriteFile(timestampFile, jsonData, 0600); err != nil {
@@ -209,19 +259,19 @@ func SignManifest(m *model.Manifest) error {
 func (s *Service) RemoveStaleManifests() error {
 	log.Println("deleting stale manifests...")
 
-	files, err := os.ReadDir(BASE_PATH)
+	files, err := os.ReadDir(basePath)
 	if err != nil {
 		return fmt.Errorf("failed to read manifest directory: %w", err)
 	}
 
 	// Calculate the cutoff time for stale manifests
-	cutoff := time.Now().AddDate(0, 0, -STALE_DAYS)
+	cutoff := time.Now().AddDate(0, 0, -staleDays)
 
 	for _, file := range files {
 		name := file.Name()
 
 		// Skip non-JSON files and current manifest
-		if file.IsDir() || !strings.HasSuffix(name, ".json") || name == CURRENT_MANIFEST {
+		if file.IsDir() || !strings.HasSuffix(name, ".json") || name == currentManifest {
 			continue
 		}
 
@@ -233,7 +283,7 @@ func (s *Service) RemoveStaleManifests() error {
 		}
 
 		if timestamp.Before(cutoff) {
-			fullPath := filepath.Join(BASE_PATH, name)
+			fullPath := filepath.Join(basePath, name)
 			if err := os.Remove(fullPath); err != nil {
 				fmt.Printf("failed to delete old manifest %s: %v\n", name, err)
 			} else {
