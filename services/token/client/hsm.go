@@ -5,7 +5,6 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
@@ -33,17 +32,15 @@ func NewHSM() (*HSM, error) {
 	}, nil
 }
 
-func (h *HSM) Token(input string, ttlMinutes int) (*model.HSMToken, error) {
+func (h *HSM) Token(input string) (*model.HSMToken, error) {
 	// TODO: Implement HSM signing
 	if input == "" {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
 
 	inputHash := sha512.Sum512([]byte(input))
-	expiresAt := time.Now().Add(time.Duration(ttlMinutes) * time.Minute)
 
 	return &model.HSMToken{
-		Token:     base64.StdEncoding.EncodeToString(inputHash[:]),
-		ExpiresAt: expiresAt,
+		Token: base64.StdEncoding.EncodeToString(inputHash[:]),
 	}, nil
 }

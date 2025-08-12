@@ -13,7 +13,7 @@ import (
 )
 
 type HSMClient interface {
-	Token(input string, ttlMinutes int) (*model.HSMToken, error)
+	Token(input string) (*model.HSMToken, error)
 }
 
 type Server struct {
@@ -52,7 +52,7 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Generate(ctx context.Context, req *proto.Request) (*proto.Response, error) {
-	token, err := s.generateToken(req.Input, int(req.TtlMinutes))
+	token, err := s.generateToken(req.Input)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -63,6 +63,6 @@ func (s *Server) Generate(ctx context.Context, req *proto.Request) (*proto.Respo
 	}, nil
 }
 
-func (s *Server) generateToken(input string, ttlMinutes int) (*model.HSMToken, error) {
-	return s.HSMClient.Token(input, ttlMinutes)
+func (s *Server) generateToken(input string) (*model.HSMToken, error) {
+	return s.HSMClient.Token(input)
 }
