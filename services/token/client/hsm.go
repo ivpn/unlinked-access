@@ -6,9 +6,10 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/config"
+	ksmconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
+	"ivpn.net/auth/services/token/config"
 	"ivpn.net/auth/services/token/model"
 )
 
@@ -17,18 +18,20 @@ var (
 )
 
 type HSM struct {
+	Cfg    *config.Config
 	Client *kms.Client
 }
 
-func NewHSM() (*HSM, error) {
+func NewHSM(cfg config.Config) (*HSM, error) {
 	ctx := context.Background()
-	cfg, err := config.LoadDefaultConfig(ctx)
+	ksmCfg, err := ksmconfig.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
 	return &HSM{
-		Client: kms.NewFromConfig(cfg),
+		Cfg:    &cfg,
+		Client: kms.NewFromConfig(ksmCfg),
 	}, nil
 }
 
@@ -37,7 +40,7 @@ func (h *HSM) Token(input string) (*model.HSMToken, error) {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
 
-	keyID := "kms-key-id"
+	keyID := h.Cfg.KeyId
 	digest := sha512.Sum512([]byte(input))
 	ctx := context.Background()
 

@@ -14,7 +14,7 @@ func main() {
 		log.Println(err)
 	}
 
-	hsm, err := client.NewHSM()
+	hsm, err := client.NewHSM(cfg)
 	if err != nil {
 		log.Println(err)
 	}
