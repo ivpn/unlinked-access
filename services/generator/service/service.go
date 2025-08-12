@@ -2,7 +2,6 @@ package service
 
 import (
 	"crypto/sha256"
-	"crypto/sha512"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -138,8 +137,7 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 
 	subscriptions := make([]model.Subscription, len(accounts))
 	for i, account := range accounts {
-		accountIDHash := sha512.Sum512([]byte(account.ID))
-		token, err := s.Token.GenerateToken(base64.StdEncoding.EncodeToString(accountIDHash[:]))
+		token, err := s.Token.GenerateToken(account.ID)
 		if err != nil {
 			log.Printf("error generating token for account %s: %v", account.ID, err)
 			continue
