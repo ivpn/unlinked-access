@@ -151,7 +151,7 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 	var wg sync.WaitGroup
 
 	// Start workers
-	for w := 0; w < workerCount; w++ {
+	for w := range workerCount {
 		wg.Add(1)
 		go func(workerID int) {
 			defer wg.Done()
