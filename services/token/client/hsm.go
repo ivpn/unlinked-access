@@ -8,7 +8,7 @@ import (
 
 	ksmconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
-	kmstypes "github.com/aws/aws-sdk-go-v2/service/kms/types"
+	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"ivpn.net/auth/services/token/config"
 	"ivpn.net/auth/services/token/model"
 )
@@ -47,8 +47,8 @@ func (h *HSM) Token(input string) (*model.HSMToken, error) {
 	signInput := &kms.SignInput{
 		KeyId:            &keyID,
 		Message:          digest[:],
-		MessageType:      kmstypes.MessageTypeDigest,
-		SigningAlgorithm: kmstypes.SigningAlgorithmSpecRsassaPssSha256,
+		MessageType:      types.MessageTypeDigest,
+		SigningAlgorithm: types.SigningAlgorithmSpecRsassaPssSha256,
 	}
 
 	signOut, err := h.Client.Sign(ctx, signInput)
