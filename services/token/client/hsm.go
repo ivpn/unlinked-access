@@ -1,11 +1,14 @@
 package client
 
 import (
+	"context"
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"ivpn.net/auth/services/token/model"
 )
 
@@ -14,10 +17,20 @@ var (
 	ErrGenerateToken = "failed to generate token"
 )
 
-type HSM struct{}
+type HSM struct {
+	Client *kms.Client
+}
 
-func NewHSM() *HSM {
-	return &HSM{}
+func NewHSM() (*HSM, error) {
+	ctx := context.Background()
+	cfg, err := config.LoadDefaultConfig(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load AWS config: %w", err)
+	}
+
+	return &HSM{
+		Client: kms.NewFromConfig(cfg),
+	}, nil
 }
 
 func (h *HSM) Token(input string, ttlMinutes int) (*model.HSMToken, error) {
