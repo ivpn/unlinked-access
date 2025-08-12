@@ -67,7 +67,6 @@ func TestMockHSM_Token(t *testing.T) {
 }
 
 func TestMockHSM_TokenConsistency(t *testing.T) {
-	// Test that same input generates different tokens due to random secret key
 	h, _ := NewMockHSM()
 	token1, err := h.Token("same-input")
 	if err != nil {
@@ -79,8 +78,8 @@ func TestMockHSM_TokenConsistency(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
-	if token1.Token == token2.Token {
-		t.Error("Expected different tokens for same input due to random secret key")
+	if token1.Token != token2.Token {
+		t.Error("Expected same tokens for same input")
 	}
 }
 
