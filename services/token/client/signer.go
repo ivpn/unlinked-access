@@ -17,32 +17,38 @@ var (
 	ErrEmptyInput = "input string cannot be empty"
 )
 
-type HSM struct {
+type Signer struct {
 	Cfg    *config.Config
 	Client *kms.Client
 }
 
-func NewHSM(cfg config.Config) (*HSM, error) {
+func NewSigner(cfg config.Config) (*Signer, error) {
 	ctx := context.Background()
 	ksmCfg, err := ksmconfig.LoadDefaultConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
-	return &HSM{
+	return &Signer{
 		Cfg:    &cfg,
 		Client: kms.NewFromConfig(ksmCfg),
 	}, nil
 }
 
-func (h *HSM) Token(input string) (*model.HSMToken, error) {
+func (s *Signer) Token(input string) (*model.HSMToken, error) {
 	if input == "" {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
 
-	keyID := h.Cfg.KeyId
+	keyID := s.Cfg.KeyId
 	digest := sha512.Sum512([]byte(input))
 	ctx := context.Background()
+
+	if s.Cfg.Mock {
+		return &model.HSMToken{
+			Token: base64.StdEncoding.EncodeToString(digest[:]),
+		}, nil
+	}
 
 	signInput := &kms.SignInput{
 		KeyId:            &keyID,
@@ -51,7 +57,7 @@ func (h *HSM) Token(input string) (*model.HSMToken, error) {
 		SigningAlgorithm: types.SigningAlgorithmSpecRsassaPssSha256,
 	}
 
-	signOut, err := h.Client.Sign(ctx, signInput)
+	signOut, err := s.Client.Sign(ctx, signInput)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign input: %w", err)
 	}
