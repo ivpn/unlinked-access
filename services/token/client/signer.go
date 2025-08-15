@@ -40,15 +40,16 @@ func (s *Signer) Token(input string) (*model.HSMToken, error) {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
 
-	keyID := s.Cfg.KeyId
 	digest := sha512.Sum512([]byte(input))
-	ctx := context.Background()
 
 	if s.Cfg.Mock {
 		return &model.HSMToken{
 			Token: base64.StdEncoding.EncodeToString(digest[:]),
 		}, nil
 	}
+
+	keyID := s.Cfg.KeyId
+	ctx := context.Background()
 
 	signInput := &kms.SignInput{
 		KeyId:            &keyID,
