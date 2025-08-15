@@ -89,7 +89,7 @@ func (s *Service) Generate() error {
 		return err
 	}
 
-	err = SignManifest(m)
+	err = s.SignManifest(m)
 	if err != nil {
 		log.Printf("error signing manifest: %v", err)
 		return err
@@ -238,8 +238,7 @@ func SaveManifest(m *model.Manifest) error {
 	return nil
 }
 
-func SignManifest(m *model.Manifest) error {
-	// TODO: Implement HSM signing
+func (s *Service) SignManifest(m *model.Manifest) error {
 	log.Println("signing manifest...")
 
 	data, err := json.Marshal(m)
@@ -249,7 +248,16 @@ func SignManifest(m *model.Manifest) error {
 	}
 
 	hash := sha256.Sum256(data)
-	m.Signature = base64.StdEncoding.EncodeToString(hash[:])
+	base64Hash := base64.StdEncoding.EncodeToString(hash[:])
+
+	// Generate signature for manifest hash
+	signature, err := s.Token.GenerateToken(base64Hash)
+	if err != nil {
+		log.Println("error generating token for manifest hash:", err)
+		return err
+	}
+
+	m.Signature = signature
 
 	log.Printf("manifest signed: %s", m.Signature)
 
