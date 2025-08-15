@@ -96,7 +96,6 @@ func (s *Service) GetManifest() (model.Manifest, error) {
 }
 
 func (s *Service) VerifyManifest(m model.Manifest) error {
-	// TODO: Implement HSM verification
 	log.Printf("verifying manifest: %v", m.ID)
 
 	if m.ValidUntil.Before(time.Now()) {
