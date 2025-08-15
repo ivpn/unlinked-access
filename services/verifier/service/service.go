@@ -2,6 +2,7 @@ package service
 
 import (
 	"crypto/sha256"
+	"crypto/sha512"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -21,12 +22,14 @@ type Store interface {
 }
 
 type Service struct {
+	Cfg   config.Config
 	Store Store
 	Http  http.Http
 }
 
 func New(cfg config.Config, store Store) *Service {
 	return &Service{
+		Cfg:   cfg,
 		Store: store,
 		Http: http.Http{
 			Cfg: cfg.API,
@@ -55,7 +58,7 @@ func (s *Service) SyncManifest() error {
 		return err
 	}
 
-	err = VerifyManifest(m)
+	err = s.VerifyManifest(m)
 	if err != nil {
 		return err
 	}
@@ -80,9 +83,14 @@ func (s *Service) GetManifest() (model.Manifest, error) {
 	return manifest, nil
 }
 
-func VerifyManifest(m model.Manifest) error {
+func (s *Service) VerifyManifest(m model.Manifest) error {
 	// TODO: Implement HSM verification
 	log.Printf("verifying manifest: %v", m.ID)
+
+	if m.ValidUntil.Before(time.Now()) {
+		log.Printf("manifest is expired: %v", m.ValidUntil)
+		return fmt.Errorf("manifest is expired")
+	}
 
 	signature := m.Signature
 	m.Signature = ""
@@ -96,14 +104,18 @@ func VerifyManifest(m model.Manifest) error {
 	hash := sha256.Sum256(data)
 	hashString := base64.StdEncoding.EncodeToString(hash[:])
 
-	if hashString != signature {
-		log.Printf("manifest signature does not match: %v != %v", hashString, signature)
-		return fmt.Errorf("invalid manifest signature")
-	}
+	if s.Cfg.Service.Mock {
+		hash512 := sha512.Sum512([]byte(hashString))
+		hashString = base64.StdEncoding.EncodeToString(hash512[:])
 
-	if m.ValidUntil.Before(time.Now()) {
-		log.Printf("manifest is expired: %v", m.ValidUntil)
-		return fmt.Errorf("manifest is expired")
+		if hashString != signature {
+			log.Printf("manifest signature (mock) does not match: %v != %v", hashString, signature)
+			return fmt.Errorf("invalid manifest signature (mock)")
+		}
+
+		log.Println("manifest signature (mock) OK")
+
+		return nil
 	}
 
 	log.Println("manifest signature OK")
