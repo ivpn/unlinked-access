@@ -48,17 +48,14 @@ func (s *Signer) Token(input string) (*model.HSMToken, error) {
 		}, nil
 	}
 
-	keyID := s.Cfg.KeyId
-	ctx := context.Background()
-
 	signInput := &kms.SignInput{
-		KeyId:            &keyID,
+		KeyId:            &s.Cfg.KeyId,
 		Message:          digest[:],
 		MessageType:      types.MessageTypeDigest,
 		SigningAlgorithm: types.SigningAlgorithmSpecRsassaPssSha256,
 	}
 
-	signOut, err := s.Client.Sign(ctx, signInput)
+	signOut, err := s.Client.Sign(context.Background(), signInput)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign input: %w", err)
 	}
