@@ -247,11 +247,11 @@ func (s *Service) SignManifest(m *model.Manifest) error {
 		return err
 	}
 
-	hash := sha256.Sum256(data)
-	base64Hash := base64.StdEncoding.EncodeToString(hash[:])
+	digest := sha256.Sum256(data)
+	digestBase64 := base64.StdEncoding.EncodeToString(digest[:])
 
 	// Generate signature for manifest hash
-	signature, err := s.Token.GenerateToken(base64Hash)
+	signature, err := s.Token.GenerateToken(digestBase64)
 	if err != nil {
 		log.Println("error generating token for manifest hash:", err)
 		return err
