@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
@@ -9,6 +10,9 @@ import (
 	"log"
 	"time"
 
+	ksmconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
+	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/jasonlvhit/gocron"
 	"ivpn.net/auth/services/verifier/client/http"
 	"ivpn.net/auth/services/verifier/config"
@@ -22,19 +26,27 @@ type Store interface {
 }
 
 type Service struct {
-	Cfg   config.Config
-	Store Store
-	Http  http.Http
+	Cfg       config.Config
+	Store     Store
+	Http      http.Http
+	KsmClient *kms.Client
 }
 
-func New(cfg config.Config, store Store) *Service {
+func New(cfg config.Config, store Store) (*Service, error) {
+	ctx := context.Background()
+	ksmCfg, err := ksmconfig.LoadDefaultConfig(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load AWS config: %w", err)
+	}
+
 	return &Service{
 		Cfg:   cfg,
 		Store: store,
 		Http: http.Http{
 			Cfg: cfg.API,
 		},
-	}
+		KsmClient: kms.NewFromConfig(ksmCfg),
+	}, nil
 }
 
 func (s *Service) Start() error {
@@ -101,21 +113,45 @@ func (s *Service) VerifyManifest(m model.Manifest) error {
 		return err
 	}
 
-	hash := sha256.Sum256(data)
-	hashString := base64.StdEncoding.EncodeToString(hash[:])
+	digest := sha256.Sum256(data)
+	digestBase64 := base64.StdEncoding.EncodeToString(digest[:])
 
 	if s.Cfg.Service.Mock {
-		hash512 := sha512.Sum512([]byte(hashString))
-		hashString = base64.StdEncoding.EncodeToString(hash512[:])
+		hash512 := sha512.Sum512([]byte(digestBase64))
+		digestBase64 = base64.StdEncoding.EncodeToString(hash512[:])
 
-		if hashString != signature {
-			log.Printf("manifest signature (mock) does not match: %v != %v", hashString, signature)
+		if digestBase64 != signature {
+			log.Printf("manifest signature (mock) does not match: %v != %v", digestBase64, signature)
 			return fmt.Errorf("invalid manifest signature (mock)")
 		}
 
 		log.Println("manifest signature (mock) OK")
 
 		return nil
+	}
+
+	sigBytes, err := base64.StdEncoding.DecodeString(signature)
+	if err != nil {
+		log.Printf("error decoding signature: %v", err)
+		return err
+	}
+
+	verifyInput := &kms.VerifyInput{
+		KeyId:            &s.Cfg.Service.KeyId,
+		Message:          digest[:],
+		MessageType:      types.MessageTypeDigest,
+		Signature:        sigBytes,
+		SigningAlgorithm: types.SigningAlgorithmSpecRsassaPssSha256,
+	}
+
+	verifyOut, err := s.KsmClient.Verify(context.Background(), verifyInput)
+	if err != nil {
+		log.Printf("error verifying manifest signature: %v", err)
+		return err
+	}
+	if !verifyOut.SignatureValid {
+		log.Printf("manifest signature is invalid")
+		return fmt.Errorf("manifest signature is invalid")
 	}
 
 	log.Println("manifest signature OK")
