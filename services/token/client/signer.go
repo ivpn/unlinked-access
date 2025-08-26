@@ -5,8 +5,11 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
+	"log"
+	"time"
 
 	ksmconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"ivpn.net/auth/services/token/config"
@@ -24,7 +27,17 @@ type Signer struct {
 
 func NewSigner(cfg config.Config) (*Signer, error) {
 	ctx := context.Background()
-	ksmCfg, err := ksmconfig.LoadDefaultConfig(ctx)
+	kmsCreds := credentials.NewStaticCredentialsProvider(
+		cfg.AWSAccessKeyId,
+		cfg.AWSSecretAccessKey,
+		"",
+	)
+	ksmCfg, err := ksmconfig.LoadDefaultConfig(
+		ctx,
+		ksmconfig.WithRegion(cfg.AWSRegion),
+		ksmconfig.WithCredentialsProvider(kmsCreds),
+	)
+
 	if err != nil {
 		return nil, fmt.Errorf("failed to load AWS config: %w", err)
 	}
@@ -36,6 +49,8 @@ func NewSigner(cfg config.Config) (*Signer, error) {
 }
 
 func (s *Signer) Token(input string) (*model.HSMToken, error) {
+	start := time.Now()
+
 	if input == "" {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
@@ -48,19 +63,21 @@ func (s *Signer) Token(input string) (*model.HSMToken, error) {
 		}, nil
 	}
 
-	signInput := &kms.SignInput{
-		KeyId:            &s.Cfg.KeyId,
-		Message:          digest[:],
-		MessageType:      types.MessageTypeDigest,
-		SigningAlgorithm: types.SigningAlgorithmSpecRsassaPssSha256,
+	generateInput := &kms.GenerateMacInput{
+		KeyId:        &s.Cfg.KeyId,
+		Message:      digest[:],
+		MacAlgorithm: types.MacAlgorithmSpecHmacSha256,
 	}
 
-	signOut, err := s.Client.Sign(context.Background(), signInput)
+	signOut, err := s.Client.GenerateMac(context.Background(), generateInput)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign input: %w", err)
 	}
 
+	elapsed := time.Since(start)
+	log.Printf("Token() completed in %s", elapsed)
+
 	return &model.HSMToken{
-		Token: base64.StdEncoding.EncodeToString(signOut.Signature),
+		Token: base64.StdEncoding.EncodeToString(signOut.Mac),
 	}, nil
 }
