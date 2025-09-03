@@ -10,9 +10,15 @@ import (
 func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	h.Server.Use(helmet.New())
 	h.Server.Use(healthcheck.New())
-	h.Server.Use(auth.NewCORS(cfg))
-	h.Server.Use(auth.NewPSK(cfg))
 
-	h.Server.Get("/v1/preauth/:id", h.GetPreAuth)
-	h.Server.Post("/v1/preauth", h.AddPreAuth)
+	get := h.Server.Group("/v1/preauth/get")
+	get.Use(auth.NewCORS(cfg))
+	get.Use(auth.NewIPFilter(cfg))
+	get.Use(auth.NewPSK(cfg))
+	get.Get("/:id", h.AddPreAuth)
+
+	add := h.Server.Group("/v1/preauth/add")
+	add.Use(auth.NewIPFilter(cfg))
+	add.Use(auth.NewPSK(cfg))
+	add.Post("", h.AddPreAuth)
 }
