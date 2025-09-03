@@ -2,7 +2,8 @@
 FROM golang:1.24 AS builder
 
 RUN mkdir /generator
-ADD . /generator
+ADD services/generator /generator
+ADD proto /proto
 WORKDIR /generator
 
 ENV CGO_ENABLED=0

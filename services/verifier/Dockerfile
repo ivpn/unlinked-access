@@ -2,7 +2,7 @@
 FROM golang:1.24 AS builder
 
 RUN mkdir /verifier
-ADD . /verifier
+ADD services/verifier /verifier
 WORKDIR /verifier
 
 ENV CGO_ENABLED=0

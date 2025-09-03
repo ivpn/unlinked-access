@@ -2,7 +2,8 @@
 FROM golang:1.24 AS builder
 
 RUN mkdir /preauth
-ADD . /preauth
+ADD services/preauth /preauth
+ADD proto /proto
 WORKDIR /preauth
 
 ENV CGO_ENABLED=0

@@ -2,7 +2,7 @@
 FROM golang:1.24 AS builder
 
 RUN mkdir /distributor
-ADD . /distributor
+ADD services/distributor /distributor
 WORKDIR /distributor
 
 ENV CGO_ENABLED=0

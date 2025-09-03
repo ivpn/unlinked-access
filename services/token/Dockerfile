@@ -2,7 +2,8 @@
 FROM golang:1.24 AS builder
 
 RUN mkdir /token
-ADD . /token
+ADD services/token /token
+ADD proto /proto
 WORKDIR /token
 
 ENV CGO_ENABLED=0

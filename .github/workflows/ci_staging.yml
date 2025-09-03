@@ -28,19 +28,19 @@ jobs:
         run: git pull origin staging
 
       - name: Build auth token image
-        run: docker build -t $REGISTRY/$AUTH_TOKEN:$TAG services/token/.
+        run: docker build -t $REGISTRY/$AUTH_TOKEN:$TAG -f services/token/Dockerfile .
     
       - name: Build auth generator image
-        run: docker build -t $REGISTRY/$AUTH_GENERATOR:$TAG services/generator/.
+        run: docker build -t $REGISTRY/$AUTH_GENERATOR:$TAG -f services/generator/Dockerfile .
     
       - name: Build auth distributor image
-        run: docker build -t $REGISTRY/$AUTH_DISTRIBUTOR:$TAG services/distributor/.
+        run: docker build -t $REGISTRY/$AUTH_DISTRIBUTOR:$TAG -f services/distributor/Dockerfile .
 
       - name: Build auth preauth image
-        run: docker build -t $REGISTRY/$AUTH_PREAUTH:$TAG services/preauth/.
+        run: docker build -t $REGISTRY/$AUTH_PREAUTH:$TAG -f services/preauth/Dockerfile .
     
       - name: Build auth verifier image
-        run: docker build -t $REGISTRY/$AUTH_VERIFIER:$TAG services/verifier/.
+        run: docker build -t $REGISTRY/$AUTH_VERIFIER:$TAG -f services/verifier/Dockerfile .
 
       - name: Log in to registry
         run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ secrets.REGISTRY_NAME }} -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
