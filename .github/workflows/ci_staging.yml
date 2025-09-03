@@ -1,0 +1,61 @@
+name: CI Staging
+
+on:
+  push:
+    branches:
+      - staging
+
+env:
+  AUTH_TOKEN: auth/token
+  AUTH_GENERATOR: auth/generator
+  AUTH_DISTRIBUTOR: auth/distributor
+  AUTH_PREAUTH: auth/preauth
+  AUTH_VERIFIER: auth/verifier
+  TAG: staging
+  REGISTRY: ${{ secrets.REGISTRY_NAME }}
+
+jobs:
+  deploy_staging:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: 'staging'
+
+      - name: Pull changes from branch
+        run: git pull origin staging
+
+      - name: Build auth token image
+        run: docker build -t $REGISTRY/$AUTH_TOKEN:$TAG services/token/.
+    
+      - name: Build auth generator image
+        run: docker build -t $REGISTRY/$AUTH_GENERATOR:$TAG services/generator/.
+    
+      - name: Build auth distributor image
+        run: docker build -t $REGISTRY/$AUTH_DISTRIBUTOR:$TAG services/distributor/.
+
+      - name: Build auth preauth image
+        run: docker build -t $REGISTRY/$AUTH_PREAUTH:$TAG services/preauth/.
+    
+      - name: Build auth verifier image
+        run: docker build -t $REGISTRY/$AUTH_VERIFIER:$TAG services/verifier/.
+
+      - name: Log in to registry
+        run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ secrets.REGISTRY_NAME }} -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
+
+      - name: Push auth token:${{ env.TAG }}
+        run: docker push $REGISTRY/$AUTH_TOKEN:$TAG 
+
+      - name: Push auth generator:${{ env.TAG }}
+        run: docker push $REGISTRY/$AUTH_GENERATOR:$TAG
+
+      - name: Push auth distributor:${{ env.TAG }}
+        run: docker push $REGISTRY/$AUTH_DISTRIBUTOR:$TAG
+
+      - name: Push auth preauth:${{ env.TAG }}
+        run: docker push $REGISTRY/$AUTH_PREAUTH:$TAG
+
+      - name: Push auth verifier:${{ env.TAG }}
+        run: docker push $REGISTRY/$AUTH_VERIFIER:$TAG
