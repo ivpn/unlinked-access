@@ -10,17 +10,15 @@ import (
 
 // MockHSMClient is a mock implementation of the HSMClient interface for testing
 type MockHSMClient struct {
-	mockToken  *model.HSMToken
-	mockError  error
-	input      string
-	ttlMinutes int
+	mockToken *model.HSMToken
+	mockError error
+	input     string
 }
 
 // Token implements the HSMClient interface for the mock
-func (m *MockHSMClient) Token(input string, ttlMinutes int) (*model.HSMToken, error) {
+func (m *MockHSMClient) Token(input string) (*model.HSMToken, error) {
 	// Store the parameters for verification
 	m.input = input
-	m.ttlMinutes = ttlMinutes
 	return m.mockToken, m.mockError
 }
 
@@ -42,10 +40,9 @@ func TestGenerateToken_Success(t *testing.T) {
 
 	svc := New(mockHSM, cfg)
 	inputStr := "test-input"
-	ttl := 60
 
 	// Act
-	token, err := svc.generateToken(inputStr, ttl)
+	token, err := svc.generateToken(inputStr)
 
 	// Assert
 	if err != nil {
@@ -58,10 +55,6 @@ func TestGenerateToken_Success(t *testing.T) {
 
 	if mockHSM.input != inputStr {
 		t.Errorf("Expected input to be %v, got %v", inputStr, mockHSM.input)
-	}
-
-	if mockHSM.ttlMinutes != ttl {
-		t.Errorf("Expected ttlMinutes to be %v, got %v", ttl, mockHSM.ttlMinutes)
 	}
 }
 
@@ -80,10 +73,9 @@ func TestGenerateToken_Error(t *testing.T) {
 
 	svc := New(mockHSM, cfg)
 	inputStr := "test-input"
-	ttl := 30
 
 	// Act
-	token, err := svc.generateToken(inputStr, ttl)
+	token, err := svc.generateToken(inputStr)
 
 	// Assert
 	if err != expectedError {
@@ -97,22 +89,17 @@ func TestGenerateToken_Error(t *testing.T) {
 	if mockHSM.input != inputStr {
 		t.Errorf("Expected input to be %v, got %v", inputStr, mockHSM.input)
 	}
-
-	if mockHSM.ttlMinutes != ttl {
-		t.Errorf("Expected ttlMinutes to be %v, got %v", ttl, mockHSM.ttlMinutes)
-	}
 }
 
 func TestGenerateToken_DifferentParameters(t *testing.T) {
 	testCases := []struct {
-		name       string
-		input      string
-		ttlMinutes int
+		name  string
+		input string
 	}{
-		{"Empty input", "", 60},
-		{"Zero TTL", "test-input", 0},
-		{"Negative TTL", "test-input", -10},
-		{"Long input", "this-is-a-very-long-input-string-for-testing", 120},
+		{"Empty input", ""},
+		{"Zero TTL", "test-input"},
+		{"Negative TTL", "test-input"},
+		{"Long input", "this-is-a-very-long-input-string-for-testing"},
 	}
 
 	cfg, err := config.New()
@@ -132,7 +119,7 @@ func TestGenerateToken_DifferentParameters(t *testing.T) {
 			svc := New(mockHSM, cfg)
 
 			// Act
-			_, err := svc.generateToken(tc.input, tc.ttlMinutes)
+			_, err := svc.generateToken(tc.input)
 
 			// Assert
 			if err != nil {
@@ -141,10 +128,6 @@ func TestGenerateToken_DifferentParameters(t *testing.T) {
 
 			if mockHSM.input != tc.input {
 				t.Errorf("Expected input to be %v, got %v", tc.input, mockHSM.input)
-			}
-
-			if mockHSM.ttlMinutes != tc.ttlMinutes {
-				t.Errorf("Expected ttlMinutes to be %v, got %v", tc.ttlMinutes, mockHSM.ttlMinutes)
 			}
 		})
 	}

@@ -19,7 +19,11 @@ func main() {
 		log.Println(err)
 	}
 
-	service := service.New(cfg, db)
+	service, err := service.New(cfg, db)
+	if err != nil {
+		log.Println(err)
+	}
+
 	err = service.Start()
 	if err != nil {
 		log.Println(err)

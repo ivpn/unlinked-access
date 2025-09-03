@@ -12,20 +12,20 @@ import (
 	"ivpn.net/auth/services/token/model"
 )
 
-type HSMClient interface {
-	Token(input string, ttlMinutes int) (*model.HSMToken, error)
+type SignerClient interface {
+	Token(input string) (*model.HSMToken, error)
 }
 
 type Server struct {
-	HSMClient HSMClient
+	SignerClient SignerClient
 	proto.UnimplementedTokenServer
 	Cfg *config.Config
 }
 
-func New(hsm HSMClient, cfg config.Config) *Server {
+func New(signer SignerClient, cfg config.Config) *Server {
 	return &Server{
-		HSMClient: hsm,
-		Cfg:       &cfg,
+		SignerClient: signer,
+		Cfg:          &cfg,
 	}
 }
 
@@ -52,7 +52,7 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Generate(ctx context.Context, req *proto.Request) (*proto.Response, error) {
-	token, err := s.generateToken(req.Input, int(req.TtlMinutes))
+	token, err := s.generateToken(req.Input)
 	if err != nil {
 		log.Println(err)
 		return nil, err
@@ -63,6 +63,6 @@ func (s *Server) Generate(ctx context.Context, req *proto.Request) (*proto.Respo
 	}, nil
 }
 
-func (s *Server) generateToken(input string, ttlMinutes int) (*model.HSMToken, error) {
-	return s.HSMClient.Token(input, ttlMinutes)
+func (s *Server) generateToken(input string) (*model.HSMToken, error) {
+	return s.SignerClient.Token(input)
 }

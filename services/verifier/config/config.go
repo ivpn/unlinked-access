@@ -18,7 +18,9 @@ type DBConfig struct {
 }
 
 type ServiceConfig struct {
+	KeyId      string
 	SampleData bool
+	Mock       bool
 }
 
 type Config struct {
@@ -41,7 +43,9 @@ func New() (Config, error) {
 			Password: os.Getenv("CLIENT_DB_PASSWORD"),
 		},
 		Service: ServiceConfig{
+			KeyId:      os.Getenv("TOKEN_KEY_ID"),
 			SampleData: os.Getenv("SAMPLE_DATA") == "true",
+			Mock:       os.Getenv("TOKEN_MOCK") == "true",
 		},
 	}, nil
 }

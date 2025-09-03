@@ -14,9 +14,12 @@ func main() {
 		log.Println(err)
 	}
 
-	hsm := client.NewHSM()
+	signer, err := client.NewSigner(cfg)
+	if err != nil {
+		log.Println(err)
+	}
 
-	server := service.New(hsm, cfg)
+	server := service.New(signer, cfg)
 	err = server.Start()
 	if err != nil {
 		log.Println(err)
