@@ -15,7 +15,7 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	get.Use(auth.NewCORS(cfg))
 	get.Use(auth.NewIPFilter(cfg))
 	get.Use(auth.NewPSK(cfg))
-	get.Get("/:id", h.AddPreAuth)
+	get.Get("/:id", h.GetPreAuth)
 
 	add := h.Server.Group("/v1/preauth/add")
 	add.Use(auth.NewIPFilter(cfg))
