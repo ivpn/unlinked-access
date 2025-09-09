@@ -2,7 +2,9 @@ name: auth
 
 services:
   token:
-    build: ./services/token
+    build:
+      context: .
+      dockerfile: services/token/Dockerfile
     env_file: .env
     container_name: auth-token
     restart: unless-stopped
@@ -10,7 +12,9 @@ services:
       server:
 
   generator:
-    build: ./services/generator
+    build:
+      context: .
+      dockerfile: services/generator/Dockerfile
     env_file: .env
     container_name: auth-generator
     restart: unless-stopped
@@ -23,7 +27,9 @@ services:
       - data:/app/data
 
   distributor:
-    build: ./services/distributor
+    build:
+      context: .
+      dockerfile: services/distributor/Dockerfile
     env_file: .env
     container_name: auth-distributor
     restart: unless-stopped
@@ -35,7 +41,9 @@ services:
       - data:/app/data
 
   preauth:
-    build: ./services/preauth
+    build:
+      context: .
+      dockerfile: services/preauth/Dockerfile
     env_file: .env
     container_name: auth-preauth
     restart: unless-stopped
@@ -45,7 +53,9 @@ services:
       server:
   
   verifier:
-    build: ./services/verifier
+    build:
+      context: .
+      dockerfile: services/verifier/Dockerfile
     env_file: .env
     container_name: auth-verifier
     restart: unless-stopped
