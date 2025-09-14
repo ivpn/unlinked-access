@@ -26,9 +26,9 @@ func NewCORS(cfg config.APIConfig) fiber.Handler {
 	})
 }
 
-func NewIPFilter(cfg config.APIConfig) fiber.Handler {
+func NewIPFilter(allowedIPs []string) fiber.Handler {
 	allowed := make(map[string]struct{})
-	for _, ip := range cfg.AllowedIPs {
+	for _, ip := range allowedIPs {
 		allowed[ip] = struct{}{}
 	}
 
