@@ -20,7 +20,7 @@ func NewPSK(cfg config.APIConfig) fiber.Handler {
 
 func NewCORS(cfg config.APIConfig) fiber.Handler {
 	return cors.New(cors.Config{
-		AllowOrigins:     cfg.AllowOrigin,
+		AllowOrigins:     cfg.AllowOrigins,
 		AllowMethods:     fiber.MethodGet,
 		AllowCredentials: true,
 	})

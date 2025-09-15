@@ -5,12 +5,11 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"ivpn.net/auth/services/preauth/config"
 )
 
-func NewPSK(cfg config.APIConfig) fiber.Handler {
+func NewPSK(psk string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		if GetToken(c) != cfg.PSK {
+		if GetToken(c) != psk {
 			return c.SendStatus(fiber.StatusUnauthorized)
 		}
 
@@ -18,17 +17,17 @@ func NewPSK(cfg config.APIConfig) fiber.Handler {
 	}
 }
 
-func NewCORS(cfg config.APIConfig) fiber.Handler {
+func NewCORS(allowRemoteOrigins string) fiber.Handler {
 	return cors.New(cors.Config{
-		AllowOrigins:     cfg.AllowOrigin,
+		AllowOrigins:     allowRemoteOrigins,
 		AllowMethods:     fiber.MethodGet,
 		AllowCredentials: true,
 	})
 }
 
-func NewIPFilter(cfg config.APIConfig) fiber.Handler {
+func NewIPFilter(allowedIPs []string) fiber.Handler {
 	allowed := make(map[string]struct{})
-	for _, ip := range cfg.AllowedIPs {
+	for _, ip := range allowedIPs {
 		allowed[ip] = struct{}{}
 	}
 
