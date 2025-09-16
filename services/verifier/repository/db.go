@@ -43,13 +43,14 @@ func (d *Database) Close() error {
 
 func connect(cfg config.DBConfig) (*gorm.DB, error) {
 	config := &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
+		Logger: logger.Default.LogMode(logger.Error),
 	}
 
 	dsn := cfg.User + ":" + cfg.Password + "@tcp(" + cfg.Host + ":" + cfg.Port + ")/" + cfg.Name + "?charset=utf8mb4&parseTime=True&loc=Local"
 
 	db, err := gorm.Open(mysql.Open(dsn), config)
 	if err != nil {
+		log.Println("DB connection ERROR:", err)
 		return nil, err
 	}
 
