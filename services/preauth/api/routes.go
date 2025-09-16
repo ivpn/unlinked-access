@@ -13,12 +13,12 @@ func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 
 	get := h.Server.Group("/v1/preauth/get")
 	get.Use(auth.NewCORS(cfg.AllowRemoteOrigins))
-	get.Use(auth.NewIPFilter(cfg.AllowedRemoteIPs))
+	// get.Use(auth.NewIPFilter(cfg.AllowedRemoteIPs))
 	get.Use(auth.NewPSK(cfg.PSK))
 	get.Get("/:id", h.GetPreAuth)
 
 	add := h.Server.Group("/v1/preauth/add")
-	add.Use(auth.NewIPFilter(cfg.AllowedLocalIPs))
+	// add.Use(auth.NewIPFilter(cfg.AllowedLocalIPs))
 	add.Use(auth.NewPSK(cfg.PSK))
 	add.Post("", h.AddPreAuth)
 }
