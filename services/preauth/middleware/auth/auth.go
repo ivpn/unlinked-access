@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"log"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -33,6 +34,10 @@ func NewIPFilter(allowedIPs []string) fiber.Handler {
 
 	return func(c *fiber.Ctx) error {
 		clientIP := c.IP()
+
+		log.Println("Client IP:", clientIP)
+		log.Println("Allowed IPs:", allowedIPs)
+
 		if _, ok := allowed[clientIP]; !ok {
 			return c.SendStatus(fiber.StatusUnauthorized)
 		}
