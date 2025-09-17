@@ -17,6 +17,7 @@ type TokenServerConfig struct {
 
 type ServiceConfig struct {
 	SampleData bool
+	Mock       bool
 }
 
 type Config struct {
@@ -40,6 +41,7 @@ func New() (Config, error) {
 		},
 		Service: ServiceConfig{
 			SampleData: os.Getenv("SAMPLE_DATA") == "true",
+			Mock:       os.Getenv("GENERATOR_MOCK") == "true",
 		},
 	}, nil
 }

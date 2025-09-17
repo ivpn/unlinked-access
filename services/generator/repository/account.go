@@ -13,18 +13,20 @@ import (
 
 func (d *Database) GetAccounts() ([]*model.Account, error) {
 	var accounts []*model.Account
+	var err error
 
-	// start := time.Now()
+	if d.Cfg.Service.Mock {
+		err = d.Client.Find(&accounts).Error
+	} else {
+		start := time.Now()
+		err = d.Client.
+			Where("is_new = ?", false).
+			Where("EXISTS (SELECT 1 FROM services WHERE services.accounting_id = accounts.accounting_id AND is_active = true)").
+			Find(&accounts).Error
 
-	// err := d.Client.
-	// 	Where("is_new = ?", false).
-	// 	Where("EXISTS (SELECT 1 FROM email_service WHERE email_service.accounting_id = accounts.accounting_id)").
-	// 	Find(&accounts).Error
-
-	// elapsed := time.Since(start)
-	// log.Printf("GetAccounts() query completed in %s", elapsed)
-
-	err := d.Client.Find(&accounts).Error
+		elapsed := time.Since(start)
+		log.Printf("GetAccounts() query completed in %s", elapsed)
+	}
 
 	return accounts, err
 }

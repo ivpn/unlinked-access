@@ -12,6 +12,7 @@ import (
 
 type Database struct {
 	Client *gorm.DB
+	Cfg    config.Config
 }
 
 func NewDB(cfg config.Config) (*Database, error) {
@@ -29,6 +30,7 @@ func NewDB(cfg config.Config) (*Database, error) {
 
 	return &Database{
 		Client: db,
+		Cfg:    cfg,
 	}, nil
 }
 
