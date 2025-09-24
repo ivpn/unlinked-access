@@ -11,7 +11,6 @@ import (
 func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	h.Server.Use(helmet.New())
 	h.Server.Use(healthcheck.New())
-	h.Server.Use(auth.NewCORS(cfg))
 	h.Server.Use(auth.NewPSK(cfg))
 	h.Server.Use(compress.New())
 
