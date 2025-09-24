@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
 	"ivpn.net/auth/services/distributor/config"
 )
 
@@ -16,14 +15,6 @@ func NewPSK(cfg config.APIConfig) fiber.Handler {
 
 		return c.Next()
 	}
-}
-
-func NewCORS(cfg config.APIConfig) fiber.Handler {
-	return cors.New(cors.Config{
-		AllowOrigins:     cfg.AllowOrigins,
-		AllowMethods:     fiber.MethodGet,
-		AllowCredentials: true,
-	})
 }
 
 func NewIPFilter(cfg config.APIConfig) fiber.Handler {
