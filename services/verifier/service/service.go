@@ -145,20 +145,21 @@ func (s *Service) VerifyManifest(m model.Manifest) error {
 		return err
 	}
 
-	verifyInput := &kms.VerifyInput{
-		KeyId:            &s.Cfg.Service.AWSAccessKeyId,
-		Message:          digest[:],
-		MessageType:      types.MessageTypeDigest,
-		Signature:        sigBytes,
-		SigningAlgorithm: types.SigningAlgorithmSpecRsassaPssSha256,
+	message := sha512.Sum512([]byte(digestBase64))
+
+	verifyInput := &kms.VerifyMacInput{
+		KeyId:        &s.Cfg.Service.KeyId,
+		Message:      message[:],
+		Mac:          sigBytes,
+		MacAlgorithm: types.MacAlgorithmSpecHmacSha256,
 	}
 
-	verifyOut, err := s.KsmClient.Verify(context.Background(), verifyInput)
-	if err != nil {
-		log.Printf("error verifying manifest signature: %v", err)
-		return err
+	verifyOut, _ := s.KsmClient.VerifyMac(context.Background(), verifyInput)
+	if verifyOut == nil {
+		log.Printf("error verifying manifest signature: verifyOut is nil")
+		return fmt.Errorf("error verifying manifest signature: verifyOut is nil")
 	}
-	if !verifyOut.SignatureValid {
+	if !verifyOut.MacValid {
 		log.Printf("manifest signature is invalid")
 		return fmt.Errorf("manifest signature is invalid")
 	}
