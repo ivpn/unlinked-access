@@ -11,6 +11,7 @@ import (
 	"time"
 
 	ksmconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/jasonlvhit/gocron"
@@ -34,7 +35,16 @@ type Service struct {
 
 func New(cfg config.Config, store Store) (*Service, error) {
 	ctx := context.Background()
-	ksmCfg, err := ksmconfig.LoadDefaultConfig(ctx)
+	kmsCreds := credentials.NewStaticCredentialsProvider(
+		cfg.Service.AWSAccessKeyId,
+		cfg.Service.AWSSecretAccessKey,
+		"",
+	)
+	ksmCfg, err := ksmconfig.LoadDefaultConfig(
+		ctx,
+		ksmconfig.WithRegion(cfg.Service.AWSRegion),
+		ksmconfig.WithCredentialsProvider(kmsCreds),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load AWS config: %w", err)
 	}
@@ -136,7 +146,7 @@ func (s *Service) VerifyManifest(m model.Manifest) error {
 	}
 
 	verifyInput := &kms.VerifyInput{
-		KeyId:            &s.Cfg.Service.KeyId,
+		KeyId:            &s.Cfg.Service.AWSAccessKeyId,
 		Message:          digest[:],
 		MessageType:      types.MessageTypeDigest,
 		Signature:        sigBytes,

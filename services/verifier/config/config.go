@@ -18,9 +18,12 @@ type DBConfig struct {
 }
 
 type ServiceConfig struct {
-	KeyId      string
-	SampleData bool
-	Mock       bool
+	KeyId              string
+	SampleData         bool
+	Mock               bool
+	AWSAccessKeyId     string
+	AWSSecretAccessKey string
+	AWSRegion          string
 }
 
 type Config struct {
@@ -43,9 +46,12 @@ func New() (Config, error) {
 			Password: os.Getenv("CLIENT_DB_PASSWORD"),
 		},
 		Service: ServiceConfig{
-			KeyId:      os.Getenv("TOKEN_KEY_ID"),
-			SampleData: os.Getenv("SAMPLE_DATA") == "true",
-			Mock:       os.Getenv("TOKEN_MOCK") == "true",
+			KeyId:              os.Getenv("TOKEN_KEY_ID"),
+			SampleData:         os.Getenv("SAMPLE_DATA") == "true",
+			Mock:               os.Getenv("TOKEN_MOCK") == "true",
+			AWSAccessKeyId:     os.Getenv("AWS_ACCESS_KEY_ID"),
+			AWSSecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+			AWSRegion:          os.Getenv("AWS_REGION"),
 		},
 	}, nil
 }
