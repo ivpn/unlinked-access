@@ -76,7 +76,6 @@ services:
       timeout: 10s
       retries: 5
     environment:
-      MYSQL_ROOT_PASSWORD: ${SERVER_DB_ROOT_PASSWORD}
       MYSQL_DATABASE: ${SERVER_DB_NAME}
       MYSQL_USER: ${SERVER_DB_USER}
       MYSQL_PASSWORD: ${SERVER_DB_PASSWORD}
@@ -95,7 +94,6 @@ services:
       timeout: 10s
       retries: 5
     environment:
-      MYSQL_ROOT_PASSWORD: ${CLIENT_DB_ROOT_PASSWORD}
       MYSQL_DATABASE: ${CLIENT_DB_NAME}
       MYSQL_USER: ${CLIENT_DB_USER}
       MYSQL_PASSWORD: ${CLIENT_DB_PASSWORD}
