@@ -14,7 +14,7 @@ func main() {
 		log.Println(err)
 	}
 
-	signer, err := client.NewSigner(cfg)
+	signer, err := client.NewAWSSigner(cfg)
 	if err != nil {
 		log.Println(err)
 	}
