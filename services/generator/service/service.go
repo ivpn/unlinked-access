@@ -172,11 +172,14 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 				// Hash the token
 				tokenHash := sha256.Sum256([]byte(token))
 
-				// Send the subscription result to the channel
+				// Set ActiveUntil to 12:00 (UTC) of the day from account.ActiveUntil
+				accountUntil := account.ActiveUntil.UTC()
+				roundedUntil := time.Date(accountUntil.Year(), accountUntil.Month(), accountUntil.Day(), 12, 0, 0, 0, time.UTC)
+
 				results <- model.Subscription{
 					TokenHash:   base64.StdEncoding.EncodeToString(tokenHash[:]),
 					IsActive:    account.IsActive,
-					ActiveUntil: account.ActiveUntil,
+					ActiveUntil: roundedUntil,
 					Tier:        account.Product,
 				}
 			}

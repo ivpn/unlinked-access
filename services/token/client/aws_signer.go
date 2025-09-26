@@ -25,7 +25,7 @@ type Signer struct {
 	Client *kms.Client
 }
 
-func NewSigner(cfg config.Config) (*Signer, error) {
+func NewAWSSigner(cfg config.Config) (*Signer, error) {
 	ctx := context.Background()
 	kmsCreds := credentials.NewStaticCredentialsProvider(
 		cfg.AWSAccessKeyId,
