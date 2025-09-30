@@ -4,36 +4,11 @@ import (
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func NewPSK(psk string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		if GetToken(c) != psk {
-			return c.SendStatus(fiber.StatusUnauthorized)
-		}
-
-		return c.Next()
-	}
-}
-
-func NewCORS(allowRemoteOrigins string) fiber.Handler {
-	return cors.New(cors.Config{
-		AllowOrigins:     allowRemoteOrigins,
-		AllowMethods:     fiber.MethodGet,
-		AllowCredentials: true,
-	})
-}
-
-func NewIPFilter(allowedIPs []string) fiber.Handler {
-	allowed := make(map[string]struct{})
-	for _, ip := range allowedIPs {
-		allowed[ip] = struct{}{}
-	}
-
-	return func(c *fiber.Ctx) error {
-		clientIP := c.IP()
-		if _, ok := allowed[clientIP]; !ok {
 			return c.SendStatus(fiber.StatusUnauthorized)
 		}
 

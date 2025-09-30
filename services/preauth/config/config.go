@@ -7,8 +7,10 @@ import (
 )
 
 type APIConfig struct {
-	Port               string
-	PSK                string
+	AddPort            string
+	AddPSK             string
+	GetPort            string
+	GetPSK             string
 	AllowRemoteOrigins string
 	AllowedRemoteIPs   []string
 	AllowedLocalIPs    []string
@@ -54,8 +56,10 @@ func New() (Config, error) {
 
 	return Config{
 		API: APIConfig{
-			Port:               os.Getenv("PREAUTH_PORT"),
-			PSK:                os.Getenv("PREAUTH_PSK"),
+			AddPort:            os.Getenv("PREAUTH_ADD_PORT"),
+			AddPSK:             os.Getenv("PREAUTH_ADD_PSK"),
+			GetPort:            os.Getenv("PREAUTH_GET_PORT"),
+			GetPSK:             os.Getenv("PREAUTH_GET_PSK"),
 			AllowRemoteOrigins: os.Getenv("PREAUTH_ALLOW_REMOTE_ORIGINS"),
 			AllowedRemoteIPs:   allowedRemoteIPs,
 			AllowedLocalIPs:    allowedLocalIPs,

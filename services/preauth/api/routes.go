@@ -7,16 +7,20 @@ import (
 	"ivpn.net/auth/services/preauth/middleware/auth"
 )
 
-func (h *Handler) SetupRoutes(cfg config.APIConfig) {
+func (h *Handler) SetupRoutesAdd(cfg config.APIConfig) {
+	h.Server.Use(helmet.New())
+	h.Server.Use(healthcheck.New())
+
+	add := h.Server.Group("/v1/preauth/add")
+	add.Use(auth.NewPSK(cfg.AddPSK))
+	add.Post("", h.AddPreAuth)
+}
+
+func (h *Handler) SetupRoutesGet(cfg config.APIConfig) {
 	h.Server.Use(helmet.New())
 	h.Server.Use(healthcheck.New())
 
 	get := h.Server.Group("/v1/preauth/get")
-	get.Use(auth.NewCORS(cfg.AllowRemoteOrigins))
-	get.Use(auth.NewPSK(cfg.PSK))
+	get.Use(auth.NewPSK(cfg.GetPSK))
 	get.Get("/:id", h.GetPreAuth)
-
-	add := h.Server.Group("/v1/preauth/add")
-	add.Use(auth.NewPSK(cfg.PSK))
-	add.Post("", h.AddPreAuth)
 }
