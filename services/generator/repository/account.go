@@ -21,7 +21,7 @@ func (d *Database) GetAccounts() ([]*model.Account, error) {
 		start := time.Now()
 		err = d.Client.
 			Where("is_new = ?", false).
-			Where("EXISTS (SELECT 1 FROM services WHERE services.accounting_id = accounts.accounting_id AND is_active = true)").
+			Where("EXISTS (SELECT 1 FROM services WHERE services.accounting_id = accounts.accounting_id AND accounts.is_active = true)").
 			Find(&accounts).Error
 
 		elapsed := time.Since(start)
