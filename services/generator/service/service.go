@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"strings"
@@ -165,7 +166,6 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 				// Generate token for account ID
 				token, err := s.Token.GenerateToken(account.ID)
 				if err != nil {
-					log.Printf("error generating token for account %s: %v", account.ID, err)
 					continue
 				}
 
@@ -203,6 +203,12 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 	for sub := range results {
 		signedSubs = append(signedSubs, sub)
 	}
+
+	// Randomize order
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	r.Shuffle(len(signedSubs), func(i, j int) {
+		signedSubs[i], signedSubs[j] = signedSubs[j], signedSubs[i]
+	})
 
 	log.Printf("signed %d subscriptions in %s with %d workers (limit: %d TPS)\n", len(signedSubs), time.Since(start), workerCount, targetTPS)
 
