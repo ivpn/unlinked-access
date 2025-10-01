@@ -31,20 +31,41 @@ type Handler struct {
 }
 
 func Start(cfg config.APIConfig, service Service) error {
-	log.Printf("preauth server starting on :%s", cfg.Port)
+	// Channel to collect errors from both servers
+	errCh := make(chan error, 2)
 
-	app := fiber.New()
+	// Start /add server in a goroutine
+	go func() {
+		h := &Handler{
+			Cfg:       cfg,
+			Server:    fiber.New(),
+			Service:   service,
+			Validator: utils.NewValidator(),
+		}
 
-	h := &Handler{
-		Cfg:       cfg,
-		Server:    app,
-		Service:   service,
-		Validator: utils.NewValidator(),
-	}
+		h.SetupRoutesAdd(h.Cfg)
 
-	h.SetupRoutes(h.Cfg)
+		log.Printf("preauth /add server starting on :%s", cfg.AddPort)
+		errCh <- h.Server.Listen(":" + cfg.AddPort)
+	}()
 
-	return h.Server.Listen(":" + h.Cfg.Port)
+	// Start /get server in a goroutine
+	go func() {
+		h := &Handler{
+			Cfg:       cfg,
+			Server:    fiber.New(),
+			Service:   service,
+			Validator: utils.NewValidator(),
+		}
+
+		h.SetupRoutesGet(h.Cfg)
+
+		log.Printf("preauth /get server starting on :%s", cfg.GetPort)
+		errCh <- h.Server.Listen(":" + cfg.GetPort)
+	}()
+
+	// Wait for any server to return an error
+	return <-errCh
 }
 
 func (h *Handler) AddPreAuth(c *fiber.Ctx) error {

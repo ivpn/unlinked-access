@@ -48,7 +48,8 @@ services:
     container_name: auth-preauth
     restart: unless-stopped
     ports:
-      - ${PREAUTH_PORT}:${PREAUTH_PORT}
+      - ${PREAUTH_ADD_PORT}:${PREAUTH_ADD_PORT}
+      - ${PREAUTH_GET_PORT}:${PREAUTH_GET_PORT}
     networks:
       server:
   

@@ -7,12 +7,11 @@ import (
 )
 
 type APIConfig struct {
-	Port               string
-	PSK                string
-	AllowRemoteOrigins string
-	AllowedRemoteIPs   []string
-	AllowedLocalIPs    []string
-	PreauthTTL         time.Duration
+	AddPort    string
+	AddPSK     string
+	GetPort    string
+	GetPSK     string
+	PreauthTTL time.Duration
 }
 
 type RedisConfig struct {
@@ -48,18 +47,15 @@ func New() (Config, error) {
 		return Config{}, err
 	}
 
-	allowedRemoteIPs := strings.Split(os.Getenv("PREAUTH_ALLOW_REMOTE_IPS"), ",")
-	allowedLocalIPs := strings.Split(os.Getenv("PREAUTH_ALLOW_LOCAL_IPS"), ",")
 	redisAddrs := strings.Split(os.Getenv("REDIS_ADDRESSES"), ",")
 
 	return Config{
 		API: APIConfig{
-			Port:               os.Getenv("PREAUTH_PORT"),
-			PSK:                os.Getenv("PREAUTH_PSK"),
-			AllowRemoteOrigins: os.Getenv("PREAUTH_ALLOW_REMOTE_ORIGINS"),
-			AllowedRemoteIPs:   allowedRemoteIPs,
-			AllowedLocalIPs:    allowedLocalIPs,
-			PreauthTTL:         preauthTTL,
+			AddPort:    os.Getenv("PREAUTH_ADD_PORT"),
+			AddPSK:     os.Getenv("PREAUTH_ADD_PSK"),
+			GetPort:    os.Getenv("PREAUTH_GET_PORT"),
+			GetPSK:     os.Getenv("PREAUTH_GET_PSK"),
+			PreauthTTL: preauthTTL,
 		},
 		Redis: RedisConfig{
 			Addr:                  os.Getenv("REDIS_ADDR"),
