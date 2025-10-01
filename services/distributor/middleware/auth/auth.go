@@ -17,22 +17,6 @@ func NewPSK(cfg config.APIConfig) fiber.Handler {
 	}
 }
 
-func NewIPFilter(cfg config.APIConfig) fiber.Handler {
-	allowed := make(map[string]struct{})
-	for _, ip := range cfg.AllowedIPs {
-		allowed[ip] = struct{}{}
-	}
-
-	return func(c *fiber.Ctx) error {
-		clientIP := c.IP()
-		if _, ok := allowed[clientIP]; !ok {
-			return c.SendStatus(fiber.StatusUnauthorized)
-		}
-
-		return c.Next()
-	}
-}
-
 func GetToken(c *fiber.Ctx) string {
 	var token string
 	authorization := c.Get("Authorization")
