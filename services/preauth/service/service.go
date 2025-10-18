@@ -60,12 +60,12 @@ func (s *Service) GetPreAuth(ctx context.Context, ID string) (model.PreAuth, err
 	return retrieved, nil
 }
 
-func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive bool, activeUntil time.Time, tier string) (model.PreAuth, error) {
+func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive bool, activeUntil time.Time, tier string) (string, error) {
 	// Generate token
 	token, err := s.Token.GenerateToken(accountId)
 	if err != nil {
 		log.Println("failed to generate token:", err)
-		return model.PreAuth{}, err
+		return "", err
 	}
 
 	// Create an instance of PreAuth
@@ -82,14 +82,14 @@ func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive boo
 	data, err := json.Marshal(pa)
 	if err != nil {
 		log.Println("failed to marshal pre-auth to JSON:", err)
-		return model.PreAuth{}, err
+		return "", err
 	}
 
 	// Set in Redis
 	err = s.Cache.Set(ctx, "preauth_"+pa.ID, string(data), s.Cfg.API.PreauthTTL)
 	if err != nil {
 		log.Println("failed to set pre-auth in cache:", err)
-		return model.PreAuth{}, err
+		return "", err
 	}
 
 	// Create an instance of Session
@@ -103,8 +103,8 @@ func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive boo
 	err = s.Http.PostSession(session)
 	if err != nil {
 		log.Println("failed to post session to webhook:", err)
-		return model.PreAuth{}, err
+		return "", err
 	}
 
-	return pa, nil
+	return session.ID, nil
 }
