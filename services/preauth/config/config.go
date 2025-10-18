@@ -12,6 +12,8 @@ type APIConfig struct {
 	GetPort    string
 	GetPSK     string
 	PreauthTTL time.Duration
+	SessionURL string
+	SessionPSK string
 }
 
 type RedisConfig struct {
