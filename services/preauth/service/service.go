@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"ivpn.net/auth/services/preauth/client/http"
 	"ivpn.net/auth/services/preauth/config"
 	"ivpn.net/auth/services/preauth/model"
 )
@@ -28,6 +29,7 @@ type Service struct {
 	Cfg   config.Config
 	Cache Cache
 	Token TokenClient
+	Http  *http.Http
 }
 
 func New(cfg config.Config, cache Cache, token TokenClient) *Service {
@@ -35,6 +37,7 @@ func New(cfg config.Config, cache Cache, token TokenClient) *Service {
 		Cfg:   cfg,
 		Cache: cache,
 		Token: token,
+		Http:  http.New(cfg.API),
 	}
 }
 
@@ -57,12 +60,12 @@ func (s *Service) GetPreAuth(ctx context.Context, ID string) (model.PreAuth, err
 	return retrieved, nil
 }
 
-func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive bool, activeUntil time.Time, tier string) (model.PreAuth, error) {
+func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive bool, activeUntil time.Time, tier string) (string, error) {
 	// Generate token
 	token, err := s.Token.GenerateToken(accountId)
 	if err != nil {
 		log.Println("failed to generate token:", err)
-		return model.PreAuth{}, err
+		return "", err
 	}
 
 	// Create an instance of PreAuth
@@ -79,15 +82,29 @@ func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive boo
 	data, err := json.Marshal(pa)
 	if err != nil {
 		log.Println("failed to marshal pre-auth to JSON:", err)
-		return model.PreAuth{}, err
+		return "", err
 	}
 
 	// Set in Redis
 	err = s.Cache.Set(ctx, "preauth_"+pa.ID, string(data), s.Cfg.API.PreauthTTL)
 	if err != nil {
 		log.Println("failed to set pre-auth in cache:", err)
-		return model.PreAuth{}, err
+		return "", err
 	}
 
-	return pa, nil
+	// Create an instance of Session
+	session := model.Session{
+		ID:        uuid.New().String(),
+		Token:     token,
+		PreAuthID: pa.ID,
+	}
+
+	// Post session to webhook
+	err = s.Http.PostSession(session)
+	if err != nil {
+		log.Println("failed to post session to webhook:", err)
+		return "", err
+	}
+
+	return session.ID, nil
 }
