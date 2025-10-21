@@ -19,7 +19,7 @@ var (
 )
 
 type Service interface {
-	AddPreAuth(context.Context, string, bool, time.Time, string) (model.PreAuth, error)
+	AddPreAuth(context.Context, string, bool, time.Time, string) (string, error)
 	GetPreAuth(context.Context, string) (model.PreAuth, error)
 }
 
@@ -94,7 +94,7 @@ func (h *Handler) AddPreAuth(c *fiber.Ctx) error {
 		})
 	}
 
-	pa, err := h.Service.AddPreAuth(c.Context(), req.AccountID, req.IsActive, activeUntil, req.Tier)
+	sessionID, err := h.Service.AddPreAuth(c.Context(), req.AccountID, req.IsActive, activeUntil, req.Tier)
 	if err != nil {
 		log.Println("failed to add pre-authentication:", err)
 		return c.Status(400).JSON(fiber.Map{
@@ -102,7 +102,7 @@ func (h *Handler) AddPreAuth(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.JSON(pa)
+	return c.JSON(fiber.Map{"session_id": sessionID})
 }
 
 func (h *Handler) GetPreAuth(c *fiber.Ctx) error {
