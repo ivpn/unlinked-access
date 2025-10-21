@@ -58,6 +58,8 @@ func New() (Config, error) {
 			GetPort:    os.Getenv("PREAUTH_GET_PORT"),
 			GetPSK:     os.Getenv("PREAUTH_GET_PSK"),
 			PreauthTTL: preauthTTL,
+			SessionURL: os.Getenv("SESSION_URL"),
+			SessionPSK: os.Getenv("SESSION_PSK"),
 		},
 		Redis: RedisConfig{
 			Addr:                  os.Getenv("REDIS_ADDR"),
