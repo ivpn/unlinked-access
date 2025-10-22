@@ -102,7 +102,7 @@ func (h *Handler) AddPreAuth(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.JSON(fiber.Map{"services": fiber.Map{"mail": sessionID}})
+	return c.JSON(fiber.Map{"mail": fiber.Map{"sessionid": sessionID}})
 }
 
 func (h *Handler) GetPreAuth(c *fiber.Ctx) error {
