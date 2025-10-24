@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"ivpn.net/auth/services/verifier/config"
 	"ivpn.net/auth/services/verifier/repository"
@@ -22,6 +23,25 @@ func main() {
 	service, err := service.New(cfg, db)
 	if err != nil {
 		log.Println(err)
+	}
+
+	// Handle subcommands (default = serve)
+	args := os.Args
+	if len(args) > 1 {
+		switch args[1] {
+		case "sync":
+			if err := service.SyncManifest(); err != nil {
+				log.Println(err)
+			}
+			return
+
+		case "serve":
+			// continue to service.Start below
+			break
+
+		default:
+			return
+		}
 	}
 
 	err = service.Start()

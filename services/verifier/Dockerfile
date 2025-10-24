@@ -17,4 +17,4 @@ FROM alpine:latest AS production
 COPY --from=builder /verifier .
 
 # run the service on container startup
-CMD ["./verifier"]
+CMD ["./verifier", "serve"]
