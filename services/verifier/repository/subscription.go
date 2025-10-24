@@ -41,6 +41,7 @@ func (d *Database) UpdateSubscriptions(subs []model.Subscription) error {
 	sql := fmt.Sprintf(`
 		UPDATE subscriptions
 		SET 
+			updated_at = NOW(),
 			is_active = CASE id %s END,
 			active_until = CASE id %s END,
 			tier = CASE id %s END
