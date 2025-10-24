@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"ivpn.net/auth/services/generator/client"
 	"ivpn.net/auth/services/generator/config"
@@ -26,6 +27,26 @@ func main() {
 	}
 
 	service := service.New(cfg, db, tokenClient)
+
+	// Handle subcommands (default = serve)
+	args := os.Args
+	if len(args) > 1 {
+		switch args[1] {
+		case "sync":
+			if err := service.Generate(); err != nil {
+				log.Println(err)
+			}
+			return
+
+		case "serve":
+			// continue to service.Start below
+			break
+
+		default:
+			return
+		}
+	}
+
 	err = service.Start()
 	if err != nil {
 		log.Println(err)

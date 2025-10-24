@@ -18,4 +18,4 @@ FROM alpine:latest AS production
 COPY --from=builder /generator .
 
 # run the service on container startup
-CMD ["./generator"]
+CMD ["./generator", "serve"]

@@ -22,7 +22,6 @@ import (
 
 type Store interface {
 	GetSubscriptions() ([]model.Subscription, error)
-	UpdateSubscription(model.Subscription) error
 	UpdateSubscriptions([]model.Subscription) error
 }
 
