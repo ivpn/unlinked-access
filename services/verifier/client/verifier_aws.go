@@ -46,9 +46,21 @@ func (s *Verifier) Verify(signature string, data []byte) error {
 	digest := sha256.Sum256(data)
 	digestBase64 := base64.StdEncoding.EncodeToString(digest[:])
 
+	if s.Cfg.Service.Mock {
+		hash512 := sha512.Sum512([]byte(digestBase64))
+		digestBase64 = base64.StdEncoding.EncodeToString(hash512[:])
+
+		if digestBase64 != signature {
+			return fmt.Errorf("invalid manifest signature (mock)")
+		}
+
+		log.Println("manifest signature (mock) OK")
+
+		return nil
+	}
+
 	sigBytes, err := base64.StdEncoding.DecodeString(signature)
 	if err != nil {
-		log.Printf("error decoding signature: %v", err)
 		return fmt.Errorf("error decoding signature: %w", err)
 	}
 
@@ -63,11 +75,9 @@ func (s *Verifier) Verify(signature string, data []byte) error {
 
 	verifyOut, _ := s.Client.VerifyMac(context.Background(), verifyInput)
 	if verifyOut == nil {
-		log.Printf("error verifying manifest signature: verifyOut is nil")
 		return fmt.Errorf("error verifying manifest signature: verifyOut is nil")
 	}
 	if !verifyOut.MacValid {
-		log.Printf("manifest signature is invalid")
 		return fmt.Errorf("manifest signature is invalid")
 	}
 
