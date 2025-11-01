@@ -5,8 +5,6 @@ import (
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
-	"log"
-	"time"
 
 	ksmconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
@@ -20,12 +18,12 @@ var (
 	ErrEmptyInput = "input string cannot be empty"
 )
 
-type Signer struct {
+type SignerAWS struct {
 	Cfg    *config.Config
 	Client *kms.Client
 }
 
-func NewSignerAWS(cfg config.Config) (*Signer, error) {
+func NewSignerAWS(cfg config.Config) (*SignerAWS, error) {
 	ctx := context.Background()
 	kmsCreds := credentials.NewStaticCredentialsProvider(
 		cfg.AWSAccessKeyId,
@@ -42,18 +40,18 @@ func NewSignerAWS(cfg config.Config) (*Signer, error) {
 		return nil, fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
-	return &Signer{
+	return &SignerAWS{
 		Cfg:    &cfg,
 		Client: kms.NewFromConfig(ksmCfg),
 	}, nil
 }
 
-func (s *Signer) Token(input string) (*model.HSMToken, error) {
-	start := time.Now()
-
+func (s *SignerAWS) Token(input string) (*model.HSMToken, error) {
 	if input == "" {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
+
+	// start := time.Now()
 
 	digest := sha512.Sum512([]byte(input))
 
@@ -74,8 +72,8 @@ func (s *Signer) Token(input string) (*model.HSMToken, error) {
 		return nil, fmt.Errorf("failed to sign input: %w", err)
 	}
 
-	elapsed := time.Since(start)
-	log.Printf("Token() completed in %s", elapsed)
+	// elapsed := time.Since(start)
+	// log.Printf("Token() completed in %s", elapsed)
 
 	return &model.HSMToken{
 		Token: base64.StdEncoding.EncodeToString(signOut.Mac),
