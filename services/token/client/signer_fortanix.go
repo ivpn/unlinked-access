@@ -34,7 +34,7 @@ func NewSignerFortanix(cfg config.Config) (*FortanixSigner, error) {
 	}, nil
 }
 
-func (s *FortanixSigner) Token(input string) (*model.HSMToken, error) {
+func (s *FortanixSigner) Generate(input string) (*model.HSMToken, error) {
 	if input == "" {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
@@ -69,4 +69,28 @@ func (s *FortanixSigner) Token(input string) (*model.HSMToken, error) {
 	return &model.HSMToken{
 		Token: base64.StdEncoding.EncodeToString(res.Mac),
 	}, nil
+}
+
+func (s *FortanixSigner) Verify(data [64]byte, signature string) (bool, error) {
+	sigData, err := base64.StdEncoding.DecodeString(signature)
+	if err != nil {
+		return false, err
+	}
+
+	mac := sdkms.Blob(sigData)
+	keyId := s.Cfg.FortanixKeyId
+	alg := sdkms.DigestAlgorithmSha256
+	req := sdkms.VerifyMacRequest{
+		Data: data[:],
+		Mac:  &mac,
+		Alg:  &alg,
+		Key:  sdkms.SobjectByID(keyId),
+	}
+
+	res, err := s.Client.MacVerify(context.Background(), req)
+	if err != nil {
+		return false, err
+	}
+
+	return res.Result, nil
 }

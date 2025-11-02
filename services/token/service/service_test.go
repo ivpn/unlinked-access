@@ -16,7 +16,7 @@ type MockHSMClient struct {
 }
 
 // Token implements the HSMClient interface for the mock
-func (m *MockHSMClient) Token(input string) (*model.HSMToken, error) {
+func (m *MockHSMClient) Generate(input string) (*model.HSMToken, error) {
 	// Store the parameters for verification
 	m.input = input
 	return m.mockToken, m.mockError

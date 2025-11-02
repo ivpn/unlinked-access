@@ -46,7 +46,7 @@ func NewSignerAWS(cfg config.Config) (*SignerAWS, error) {
 	}, nil
 }
 
-func (s *SignerAWS) Token(input string) (*model.HSMToken, error) {
+func (s *SignerAWS) Generate(input string) (*model.HSMToken, error) {
 	if input == "" {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
