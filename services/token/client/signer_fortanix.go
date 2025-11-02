@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"crypto/sha512"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 
@@ -16,7 +17,7 @@ type FortanixSigner struct {
 	Client *sdkms.Client
 }
 
-func NewFortanixSigner(cfg config.Config) (*FortanixSigner, error) {
+func NewSignerFortanix(cfg config.Config) (*FortanixSigner, error) {
 	client := sdkms.Client{
 		Endpoint:   cfg.FortanixEndpoint,
 		HTTPClient: http.DefaultClient,
@@ -41,16 +42,23 @@ func (s *FortanixSigner) Token(input string) (*model.HSMToken, error) {
 	// start := time.Now()
 
 	digest := sha512.Sum512([]byte(input))
-	blob := sdkms.Blob(digest[:])
+	data := sdkms.Blob(digest[:])
 	keyId := s.Cfg.FortanixKeyId
 
-	req := sdkms.SignRequest{
-		Data:    &blob,
-		HashAlg: sdkms.DigestAlgorithmSha512,
-		Key:     sdkms.SobjectByID(keyId),
+	if s.Cfg.Mock {
+		return &model.HSMToken{
+			Token: base64.StdEncoding.EncodeToString(digest[:]),
+		}, nil
 	}
 
-	res, err := s.Client.Sign(context.Background(), req)
+	alg := sdkms.DigestAlgorithmSha256
+	req := sdkms.MacRequest{
+		Data: data,
+		Alg:  &alg,
+		Key:  sdkms.SobjectByID(keyId),
+	}
+
+	res, err := s.Client.Mac(context.Background(), req)
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +67,6 @@ func (s *FortanixSigner) Token(input string) (*model.HSMToken, error) {
 	// log.Printf("Token() completed in %s", elapsed)
 
 	return &model.HSMToken{
-		Token: string(res.Signature),
+		Token: base64.StdEncoding.EncodeToString(res.Mac),
 	}, nil
 }
