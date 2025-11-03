@@ -121,7 +121,6 @@ func (s *Service) UpdateSubscriptions(m model.Manifest) error {
 	for i, sub := range subs {
 		updatedSub, err := UpdateSubscriptionFromManifest(sub, m.Subscriptions)
 		if err != nil {
-			log.Printf("error updating subscription: %v", err)
 			continue
 		}
 
@@ -147,5 +146,5 @@ func UpdateSubscriptionFromManifest(sub model.Subscription, manifestSubs []model
 		}
 	}
 
-	return model.Subscription{}, fmt.Errorf("subscription with TokenHash %s not found", sub.TokenHash)
+	return model.Subscription{}, fmt.Errorf("subscription %s not found in manifest", sub.ID)
 }
