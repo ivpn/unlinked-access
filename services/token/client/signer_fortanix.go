@@ -12,12 +12,12 @@ import (
 	"ivpn.net/auth/services/token/model"
 )
 
-type FortanixSigner struct {
+type SignerFortanix struct {
 	Cfg    *config.Config
 	Client *sdkms.Client
 }
 
-func NewSignerFortanix(cfg config.Config) (*FortanixSigner, error) {
+func NewSignerFortanix(cfg config.Config) (*SignerFortanix, error) {
 	client := sdkms.Client{
 		Endpoint:   cfg.FortanixEndpoint,
 		HTTPClient: http.DefaultClient,
@@ -28,13 +28,13 @@ func NewSignerFortanix(cfg config.Config) (*FortanixSigner, error) {
 		return nil, err
 	}
 
-	return &FortanixSigner{
+	return &SignerFortanix{
 		Cfg:    &cfg,
 		Client: &client,
 	}, nil
 }
 
-func (s *FortanixSigner) Generate(input string) (*model.HSMToken, error) {
+func (s *SignerFortanix) Generate(input string) (*model.HSMToken, error) {
 	if input == "" {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
@@ -71,15 +71,15 @@ func (s *FortanixSigner) Generate(input string) (*model.HSMToken, error) {
 	}, nil
 }
 
-func (s *FortanixSigner) Verify(data [64]byte, signature string) (bool, error) {
+func (s *SignerFortanix) Verify(data [64]byte, signature string) (bool, error) {
 	sigData, err := base64.StdEncoding.DecodeString(signature)
 	if err != nil {
 		return false, err
 	}
 
 	mac := sdkms.Blob(sigData)
-	keyId := s.Cfg.FortanixKeyId
 	alg := sdkms.DigestAlgorithmSha256
+	keyId := s.Cfg.FortanixKeyId
 	req := sdkms.VerifyMacRequest{
 		Data: data[:],
 		Mac:  &mac,
