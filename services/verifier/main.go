@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"ivpn.net/auth/services/verifier/client"
 	"ivpn.net/auth/services/verifier/config"
 	"ivpn.net/auth/services/verifier/repository"
 	"ivpn.net/auth/services/verifier/service"
@@ -20,7 +21,12 @@ func main() {
 		log.Println(err)
 	}
 
-	service, err := service.New(cfg, db)
+	verifier, err := client.NewVerifierAWS(cfg)
+	if err != nil {
+		log.Println(err)
+	}
+
+	service, err := service.New(cfg, db, verifier)
 	if err != nil {
 		log.Println(err)
 	}

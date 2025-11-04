@@ -1,19 +1,11 @@
 package service
 
 import (
-	"context"
-	"crypto/sha256"
-	"crypto/sha512"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
 	"time"
 
-	ksmconfig "github.com/aws/aws-sdk-go-v2/config"
-	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/kms"
-	"github.com/aws/aws-sdk-go-v2/service/kms/types"
 	"github.com/jasonlvhit/gocron"
 	"ivpn.net/auth/services/verifier/client/http"
 	"ivpn.net/auth/services/verifier/config"
@@ -25,36 +17,25 @@ type Store interface {
 	UpdateSubscriptions([]model.Subscription) error
 }
 
-type Service struct {
-	Cfg       config.Config
-	Store     Store
-	Http      http.Http
-	KsmClient *kms.Client
+type Verifier interface {
+	Verify(signature string, data []byte) error
 }
 
-func New(cfg config.Config, store Store) (*Service, error) {
-	ctx := context.Background()
-	kmsCreds := credentials.NewStaticCredentialsProvider(
-		cfg.Service.AWSAccessKeyId,
-		cfg.Service.AWSSecretAccessKey,
-		"",
-	)
-	ksmCfg, err := ksmconfig.LoadDefaultConfig(
-		ctx,
-		ksmconfig.WithRegion(cfg.Service.AWSRegion),
-		ksmconfig.WithCredentialsProvider(kmsCreds),
-	)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load AWS config: %w", err)
-	}
+type Service struct {
+	Cfg      config.Config
+	Store    Store
+	Http     http.Http
+	Verifier Verifier
+}
 
+func New(cfg config.Config, store Store, verifier Verifier) (*Service, error) {
 	return &Service{
-		Cfg:   cfg,
-		Store: store,
+		Cfg:      cfg,
+		Store:    store,
+		Verifier: verifier,
 		Http: http.Http{
 			Cfg: cfg.API,
 		},
-		KsmClient: kms.NewFromConfig(ksmCfg),
 	}, nil
 }
 
@@ -121,49 +102,11 @@ func (s *Service) VerifyManifest(m model.Manifest) error {
 		return err
 	}
 
-	digest := sha256.Sum256(data)
-	digestBase64 := base64.StdEncoding.EncodeToString(digest[:])
-
-	if s.Cfg.Service.Mock {
-		hash512 := sha512.Sum512([]byte(digestBase64))
-		digestBase64 = base64.StdEncoding.EncodeToString(hash512[:])
-
-		if digestBase64 != signature {
-			log.Printf("manifest signature (mock) does not match: %v != %v", digestBase64, signature)
-			return fmt.Errorf("invalid manifest signature (mock)")
-		}
-
-		log.Println("manifest signature (mock) OK")
-
-		return nil
-	}
-
-	sigBytes, err := base64.StdEncoding.DecodeString(signature)
+	err = s.Verifier.Verify(signature, data)
 	if err != nil {
-		log.Printf("error decoding signature: %v", err)
+		log.Println("error verifying manifest signature:", err)
 		return err
 	}
-
-	message := sha512.Sum512([]byte(digestBase64))
-
-	verifyInput := &kms.VerifyMacInput{
-		KeyId:        &s.Cfg.Service.KeyId,
-		Message:      message[:],
-		Mac:          sigBytes,
-		MacAlgorithm: types.MacAlgorithmSpecHmacSha256,
-	}
-
-	verifyOut, _ := s.KsmClient.VerifyMac(context.Background(), verifyInput)
-	if verifyOut == nil {
-		log.Printf("error verifying manifest signature: verifyOut is nil")
-		return fmt.Errorf("error verifying manifest signature: verifyOut is nil")
-	}
-	if !verifyOut.MacValid {
-		log.Printf("manifest signature is invalid")
-		return fmt.Errorf("manifest signature is invalid")
-	}
-
-	log.Println("manifest signature OK")
 
 	return nil
 }
@@ -178,7 +121,6 @@ func (s *Service) UpdateSubscriptions(m model.Manifest) error {
 	for i, sub := range subs {
 		updatedSub, err := UpdateSubscriptionFromManifest(sub, m.Subscriptions)
 		if err != nil {
-			log.Printf("error updating subscription: %v", err)
 			continue
 		}
 
@@ -204,5 +146,5 @@ func UpdateSubscriptionFromManifest(sub model.Subscription, manifestSubs []model
 		}
 	}
 
-	return model.Subscription{}, fmt.Errorf("subscription with TokenHash %s not found", sub.TokenHash)
+	return model.Subscription{}, fmt.Errorf("subscription %s not found in manifest", sub.ID)
 }
