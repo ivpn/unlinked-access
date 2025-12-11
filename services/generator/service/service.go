@@ -26,9 +26,8 @@ const (
 	currentManifest = "current.json"
 	basePath        = "/app/data"
 	staleDays       = 1
-	targetTPS       = 10 // total across all goroutines
-	burst           = 1  // allowable burst above targetTPS
-	workerCount     = 4  // number of signing goroutines
+	burst           = 1 // allowable burst above targetTPS
+	workerCount     = 4 // number of signing goroutines
 )
 
 type Store interface {
@@ -146,7 +145,7 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 	}
 
 	ctx := context.Background()
-	limiter := rate.NewLimiter(rate.Limit(targetTPS), burst)
+	limiter := rate.NewLimiter(rate.Limit(s.Cfg.Service.TPS), burst)
 	jobs := make(chan *model.Account, len(accounts))
 	results := make(chan model.Subscription, len(accounts))
 	var wg sync.WaitGroup
@@ -210,7 +209,7 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 		signedSubs[i], signedSubs[j] = signedSubs[j], signedSubs[i]
 	})
 
-	log.Printf("signed %d subscriptions in %s with %d workers (limit: %d TPS)\n", len(signedSubs), time.Since(start), workerCount, targetTPS)
+	log.Printf("signed %d subscriptions in %s with %d workers (limit: %d TPS)\n", len(signedSubs), time.Since(start), workerCount, s.Cfg.Service.TPS)
 
 	return signedSubs, nil
 }

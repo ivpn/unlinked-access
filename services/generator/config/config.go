@@ -1,6 +1,9 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strconv"
+)
 
 type DBConfig struct {
 	Host     string
@@ -18,6 +21,7 @@ type TokenServerConfig struct {
 type ServiceConfig struct {
 	SampleData bool
 	Mock       bool
+	TPS        int // total TPS across all goroutines
 }
 
 type Config struct {
@@ -27,6 +31,11 @@ type Config struct {
 }
 
 func New() (Config, error) {
+	tps, err := strconv.Atoi(os.Getenv("GENERATOR_TPS"))
+	if err != nil {
+		return Config{}, err
+	}
+
 	return Config{
 		TokenServer: TokenServerConfig{
 			Host: os.Getenv("TOKEN_HOST"),
@@ -42,6 +51,7 @@ func New() (Config, error) {
 		Service: ServiceConfig{
 			SampleData: os.Getenv("SAMPLE_DATA") == "true",
 			Mock:       os.Getenv("GENERATOR_MOCK") == "true",
+			TPS:        tps,
 		},
 	}, nil
 }
