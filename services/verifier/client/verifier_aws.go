@@ -15,12 +15,12 @@ import (
 	"ivpn.net/auth/services/verifier/config"
 )
 
-type Verifier struct {
+type VerifierAWS struct {
 	Cfg    *config.Config
 	Client *kms.Client
 }
 
-func NewVerifierAWS(cfg config.Config) (*Verifier, error) {
+func NewVerifierAWS(cfg config.Config) (*VerifierAWS, error) {
 	ctx := context.Background()
 	kmsCreds := credentials.NewStaticCredentialsProvider(
 		cfg.Service.AWSAccessKeyId,
@@ -36,13 +36,13 @@ func NewVerifierAWS(cfg config.Config) (*Verifier, error) {
 		return nil, fmt.Errorf("failed to load AWS config: %w", err)
 	}
 
-	return &Verifier{
+	return &VerifierAWS{
 		Cfg:    &cfg,
 		Client: kms.NewFromConfig(ksmCfg),
 	}, nil
 }
 
-func (s *Verifier) Verify(signature string, data []byte) error {
+func (s *VerifierAWS) Verify(signature string, data []byte) error {
 	digest := sha256.Sum256(data)
 	digestBase64 := base64.StdEncoding.EncodeToString(digest[:])
 

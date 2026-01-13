@@ -10,6 +10,9 @@ type Config struct {
 	AWSAccessKeyId     string
 	AWSSecretAccessKey string
 	AWSRegion          string
+	FortanixEndpoint   string
+	FortanixApiKey     string
+	FortanixKeyId      string
 }
 
 func New() (Config, error) {
@@ -21,5 +24,8 @@ func New() (Config, error) {
 		AWSAccessKeyId:     os.Getenv("AWS_ACCESS_KEY_ID"),
 		AWSSecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
 		AWSRegion:          os.Getenv("AWS_REGION"),
+		FortanixEndpoint:   os.Getenv("FORTANIX_ENDPOINT"),
+		FortanixApiKey:     os.Getenv("FORTANIX_API_KEY"),
+		FortanixKeyId:      os.Getenv("FORTANIX_KEY_ID"),
 	}, nil
 }
