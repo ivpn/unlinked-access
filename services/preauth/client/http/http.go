@@ -20,11 +20,11 @@ func New(cfg config.APIConfig) *Http {
 	}
 }
 
-func (h Http) PostSession(session model.Session) error {
-	req := fiber.Post(h.Cfg.SessionURL)
+func (h Http) PostSession(session model.Session, url string, psk string) error {
+	req := fiber.Post(url)
 	req.Set("Content-Type", "application/json")
 	req.Set("Accept", "application/json")
-	req.Set("Authorization", "Bearer "+h.Cfg.SessionPSK)
+	req.Set("Authorization", "Bearer "+psk)
 	req.Body([]byte(`{"id": "` + session.ID + `", "token": "` + session.Token + `", "preauth_id": "` + session.PreAuthID + `"}`))
 
 	status, res, err := req.Bytes()
