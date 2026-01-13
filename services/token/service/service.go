@@ -13,7 +13,7 @@ import (
 )
 
 type Signer interface {
-	Token(input string) (*model.HSMToken, error)
+	Generate(input string) (*model.HSMToken, error)
 }
 
 type Server struct {
@@ -64,5 +64,5 @@ func (s *Server) Generate(ctx context.Context, req *proto.Request) (*proto.Respo
 }
 
 func (s *Server) generateToken(input string) (*model.HSMToken, error) {
-	return s.Signer.Token(input)
+	return s.Signer.Generate(input)
 }

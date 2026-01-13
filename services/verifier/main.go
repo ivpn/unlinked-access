@@ -21,7 +21,7 @@ func main() {
 		log.Println(err)
 	}
 
-	verifier, err := client.NewVerifierAWS(cfg)
+	verifier, err := client.NewVerifierFortanix(cfg)
 	if err != nil {
 		log.Println(err)
 	}
