@@ -99,11 +99,14 @@ func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive boo
 		PreAuthID: pa.ID,
 	}
 
-	// Post session to webhook
-	err = s.Http.PostSession(session)
-	if err != nil {
-		log.Println("failed to post session to webhook:", err)
-		return "", err
+	// Post session to webhooks
+	for i, url := range s.Cfg.API.SessionURLs {
+		psk := s.Cfg.API.SessionPSKs[i]
+		err = s.Http.PostSession(session, url, psk)
+		if err != nil {
+			log.Println("failed to post session to webhook:", err)
+			return "", err
+		}
 	}
 
 	return session.ID, nil
