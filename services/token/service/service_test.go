@@ -22,6 +22,10 @@ func (m *MockHSMClient) Generate(input string) (*model.HSMToken, error) {
 	return m.mockToken, m.mockError
 }
 
+func (m *MockHSMClient) Authenticate() error {
+	return nil
+}
+
 func TestGenerateToken_Success(t *testing.T) {
 	// Arrange
 	expectedToken := &model.HSMToken{

@@ -71,6 +71,11 @@ func (s *SignerFortanix) Generate(input string) (*model.HSMToken, error) {
 	}, nil
 }
 
+func (s *SignerFortanix) Authenticate() error {
+	_, err := s.Client.AuthenticateWithAPIKey(context.Background(), s.Cfg.FortanixApiKey)
+	return err
+}
+
 func (s *SignerFortanix) Verify(data [64]byte, signature string) (bool, error) {
 	sigData, err := base64.StdEncoding.DecodeString(signature)
 	if err != nil {
