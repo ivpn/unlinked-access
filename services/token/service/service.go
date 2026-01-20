@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net"
+	"strings"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -14,6 +15,7 @@ import (
 
 type Signer interface {
 	Generate(input string) (*model.HSMToken, error)
+	Authenticate() error
 }
 
 type Server struct {
@@ -54,6 +56,22 @@ func (s *Server) Start() error {
 func (s *Server) Generate(ctx context.Context, req *proto.Request) (*proto.Response, error) {
 	token, err := s.generateToken(req.Input)
 	if err != nil {
+		if strings.Contains(err.Error(), "Status: 401") || strings.Contains(err.Error(), "Status: 403") {
+			log.Println("Re-authenticating Signer client session...")
+			err = s.Signer.Authenticate()
+			if err == nil {
+				token, err = s.generateToken(req.Input)
+				if err != nil {
+					log.Println(err)
+					return nil, err
+				}
+
+				return &proto.Response{
+					Token: token.Token,
+				}, nil
+			}
+		}
+
 		log.Println(err)
 		return nil, err
 	}
