@@ -57,7 +57,7 @@ func (s *Server) Generate(ctx context.Context, req *proto.Request) (*proto.Respo
 	token, err := s.generateToken(req.Input)
 	if err != nil {
 		if strings.Contains(err.Error(), "Status: 401") || strings.Contains(err.Error(), "Status: 403") {
-			log.Println("Re-authenticating Signer client session...")
+			log.Println("Re-authenticating Signer session...")
 			err = s.Signer.Authenticate()
 			if err == nil {
 				token, err = s.generateToken(req.Input)
