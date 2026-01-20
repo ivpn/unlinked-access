@@ -81,3 +81,8 @@ func (s *VerifierFortanix) Verify(signature string, data []byte) error {
 
 	return nil
 }
+
+func (s *VerifierFortanix) Authenticate() error {
+	_, err := s.Client.AuthenticateWithAPIKey(context.Background(), s.Cfg.Service.FortanixApiKey)
+	return err
+}

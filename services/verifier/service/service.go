@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/jasonlvhit/gocron"
@@ -19,6 +20,7 @@ type Store interface {
 
 type Verifier interface {
 	Verify(signature string, data []byte) error
+	Authenticate() error
 }
 
 type Service struct {
@@ -104,6 +106,20 @@ func (s *Service) VerifyManifest(m model.Manifest) error {
 
 	err = s.Verifier.Verify(signature, data)
 	if err != nil {
+		if strings.Contains(err.Error(), "Status: 401") || strings.Contains(err.Error(), "Status: 403") {
+			log.Println("Re-authenticating Verifier session...")
+			err = s.Verifier.Authenticate()
+			if err == nil {
+				err = s.Verifier.Verify(signature, data)
+				if err != nil {
+					log.Println(err)
+					return err
+				}
+
+				return nil
+			}
+		}
+
 		log.Println("error verifying manifest signature:", err)
 		return err
 	}
