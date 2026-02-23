@@ -7,13 +7,14 @@ import (
 )
 
 type APIConfig struct {
-	AddPort     string
-	AddPSK      string
-	GetPort     string
-	GetPSK      string
-	PreauthTTL  time.Duration
-	SessionURLs []string
-	SessionPSKs []string
+	AddPort         string
+	AddPSK          string
+	GetPort         string
+	GetPSK          string
+	PreauthTTL      time.Duration
+	SessionServices []string
+	SessionURLs     []string
+	SessionPSKs     []string
 }
 
 type RedisConfig struct {
@@ -49,19 +50,21 @@ func New() (Config, error) {
 		return Config{}, err
 	}
 
+	sessionServices := strings.Split(os.Getenv("SESSION_SERVICE"), ",")
 	sessionURLs := strings.Split(os.Getenv("SESSION_URL"), ",")
 	sessionPSKs := strings.Split(os.Getenv("SESSION_PSK"), ",")
 	redisAddrs := strings.Split(os.Getenv("REDIS_ADDRESSES"), ",")
 
 	return Config{
 		API: APIConfig{
-			AddPort:     os.Getenv("PREAUTH_ADD_PORT"),
-			AddPSK:      os.Getenv("PREAUTH_ADD_PSK"),
-			GetPort:     os.Getenv("PREAUTH_GET_PORT"),
-			GetPSK:      os.Getenv("PREAUTH_GET_PSK"),
-			PreauthTTL:  preauthTTL,
-			SessionURLs: sessionURLs,
-			SessionPSKs: sessionPSKs,
+			AddPort:         os.Getenv("PREAUTH_ADD_PORT"),
+			AddPSK:          os.Getenv("PREAUTH_ADD_PSK"),
+			GetPort:         os.Getenv("PREAUTH_GET_PORT"),
+			GetPSK:          os.Getenv("PREAUTH_GET_PSK"),
+			PreauthTTL:      preauthTTL,
+			SessionServices: sessionServices,
+			SessionURLs:     sessionURLs,
+			SessionPSKs:     sessionPSKs,
 		},
 		Redis: RedisConfig{
 			Addr:                  os.Getenv("REDIS_ADDR"),
