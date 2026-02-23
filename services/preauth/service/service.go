@@ -92,22 +92,22 @@ func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive boo
 		return nil, err
 	}
 
-	// Create an instance of Session
-	session := model.Session{
-		ID:        uuid.New().String(),
-		Token:     token,
-		PreAuthID: pa.ID,
-	}
-
 	// Post session to webhooks
 	services := make([]model.SessionService, len(s.Cfg.API.SessionURLs))
 	for i, url := range s.Cfg.API.SessionURLs {
+		session := model.Session{
+			ID:        uuid.New().String(),
+			Token:     token,
+			PreAuthID: pa.ID,
+		}
+
 		psk := s.Cfg.API.SessionPSKs[i]
 		err = s.Http.PostSession(session, url, psk)
 		if err != nil {
 			log.Println("failed to post session to webhook:", err)
 			return nil, err
 		}
+
 		services[i] = model.SessionService{
 			Name:      s.Cfg.API.SessionServices[i],
 			SessionId: session.ID,

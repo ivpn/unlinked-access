@@ -102,7 +102,12 @@ func (h *Handler) AddPreAuth(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.JSON(sessionServices)
+	result := make(fiber.Map, len(sessionServices))
+	for _, ss := range sessionServices {
+		result[ss.Name] = fiber.Map{"sessionid": ss.SessionId}
+	}
+
+	return c.JSON(result)
 }
 
 func (h *Handler) GetPreAuth(c *fiber.Ctx) error {
