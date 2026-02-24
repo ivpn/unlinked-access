@@ -60,12 +60,12 @@ func (s *Service) GetPreAuth(ctx context.Context, ID string) (model.PreAuth, err
 	return retrieved, nil
 }
 
-func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive bool, activeUntil time.Time, tier string) (string, error) {
+func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive bool, activeUntil time.Time, tier string) ([]model.SessionService, error) {
 	// Generate token
 	token, err := s.Token.GenerateToken(accountId)
 	if err != nil {
 		log.Println("failed to generate token:", err)
-		return "", err
+		return nil, err
 	}
 
 	// Create an instance of PreAuth
@@ -82,32 +82,37 @@ func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive boo
 	data, err := json.Marshal(pa)
 	if err != nil {
 		log.Println("failed to marshal pre-auth to JSON:", err)
-		return "", err
+		return nil, err
 	}
 
 	// Set in Redis
 	err = s.Cache.Set(ctx, "preauth_"+pa.ID, string(data), s.Cfg.API.PreauthTTL)
 	if err != nil {
 		log.Println("failed to set pre-auth in cache:", err)
-		return "", err
-	}
-
-	// Create an instance of Session
-	session := model.Session{
-		ID:        uuid.New().String(),
-		Token:     token,
-		PreAuthID: pa.ID,
+		return nil, err
 	}
 
 	// Post session to webhooks
+	services := make([]model.SessionService, len(s.Cfg.API.SessionURLs))
 	for i, url := range s.Cfg.API.SessionURLs {
+		session := model.Session{
+			ID:        uuid.New().String(),
+			Token:     token,
+			PreAuthID: pa.ID,
+		}
+
 		psk := s.Cfg.API.SessionPSKs[i]
 		err = s.Http.PostSession(session, url, psk)
 		if err != nil {
 			log.Println("failed to post session to webhook:", err)
-			return "", err
+			return nil, err
+		}
+
+		services[i] = model.SessionService{
+			Name:      s.Cfg.API.SessionServices[i],
+			SessionId: session.ID,
 		}
 	}
 
-	return session.ID, nil
+	return services, nil
 }
