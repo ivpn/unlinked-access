@@ -9,15 +9,19 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     env:
       GO111MODULE: on
     steps:
       - name: Checkout PR branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
       - name: Pull changes from PR branch
-        run: git pull origin ${{ github.event.pull_request.head.ref }}
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: git pull origin "$PR_HEAD_REF"
       - name: Install gosec
         run: |
           go install github.com/securego/gosec/v2/cmd/gosec@latest
