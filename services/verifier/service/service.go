@@ -134,16 +134,17 @@ func (s *Service) UpdateSubscriptions(m model.Manifest) error {
 		return err
 	}
 
-	for i, sub := range subs {
+	var updatedSubs []model.Subscription
+	for _, sub := range subs {
 		updatedSub, err := UpdateSubscriptionFromManifest(sub, m.Subscriptions)
 		if err != nil {
 			continue
 		}
 
-		subs[i] = updatedSub
+		updatedSubs = append(updatedSubs, updatedSub)
 	}
 
-	err = s.Store.UpdateSubscriptions(subs)
+	err = s.Store.UpdateSubscriptions(updatedSubs)
 	if err != nil {
 		log.Printf("error saving updated subscriptions: %v", err)
 		return err
