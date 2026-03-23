@@ -1,0 +1,65 @@
+name: CI Production
+
+on:
+  push:
+    tags:
+    - '*'
+
+env:
+  AUTH_TOKEN: auth/token
+  AUTH_GENERATOR: auth/generator
+  AUTH_DISTRIBUTOR: auth/distributor
+  AUTH_PREAUTH: auth/preauth
+  AUTH_VERIFIER: auth/verifier
+  TAG: latest
+  REGISTRY: ${{ secrets.REGISTRY_NAME }}
+
+jobs:
+  deploy_production:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Pull changes from branch
+        env:
+          GIT_REF: ${{ github.ref }}
+        run: git pull origin "$GIT_REF"
+
+      - name: Build auth token image
+        run: docker build -t $REGISTRY/$AUTH_TOKEN:$TAG -f services/token/Dockerfile .
+    
+      - name: Build auth generator image
+        run: docker build -t $REGISTRY/$AUTH_GENERATOR:$TAG -f services/generator/Dockerfile .
+    
+      - name: Build auth distributor image
+        run: docker build -t $REGISTRY/$AUTH_DISTRIBUTOR:$TAG -f services/distributor/Dockerfile .
+
+      - name: Build auth preauth image
+        run: docker build -t $REGISTRY/$AUTH_PREAUTH:$TAG -f services/preauth/Dockerfile .
+    
+      - name: Build auth verifier image
+        run: docker build -t $REGISTRY/$AUTH_VERIFIER:$TAG -f services/verifier/Dockerfile .
+
+      - name: Log in to registry
+        run: echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ secrets.REGISTRY_NAME }} -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
+
+      - name: Push auth token:${{ env.TAG }}
+        run: docker push $REGISTRY/$AUTH_TOKEN:$TAG 
+
+      - name: Push auth generator:${{ env.TAG }}
+        run: docker push $REGISTRY/$AUTH_GENERATOR:$TAG
+
+      - name: Push auth distributor:${{ env.TAG }}
+        run: docker push $REGISTRY/$AUTH_DISTRIBUTOR:$TAG
+
+      - name: Push auth preauth:${{ env.TAG }}
+        run: docker push $REGISTRY/$AUTH_PREAUTH:$TAG
+
+      - name: Push auth verifier:${{ env.TAG }}
+        run: docker push $REGISTRY/$AUTH_VERIFIER:$TAG
