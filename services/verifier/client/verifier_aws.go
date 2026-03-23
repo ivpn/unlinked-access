@@ -67,7 +67,7 @@ func (s *VerifierAWS) Verify(signature string, data []byte) error {
 	message := sha512.Sum512([]byte(digestBase64))
 
 	verifyInput := &kms.VerifyMacInput{
-		KeyId:        &s.Cfg.Service.KeyId,
+		KeyId:        &s.Cfg.Service.AWSKeyId,
 		Message:      message[:],
 		Mac:          sigBytes,
 		MacAlgorithm: types.MacAlgorithmSpecHmacSha256,
