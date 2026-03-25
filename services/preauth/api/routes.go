@@ -12,6 +12,7 @@ func (h *Handler) SetupRoutesAdd(cfg config.APIConfig) {
 	h.Server.Use(healthcheck.New())
 
 	add := h.Server.Group("/v1/preauth/add")
+	add.Use(auth.NewIPFilter(cfg.ApiAllowIPs))
 	add.Use(auth.NewPSK(cfg.AddPSK))
 	add.Post("", h.AddPreAuth)
 }
@@ -21,6 +22,7 @@ func (h *Handler) SetupRoutesGet(cfg config.APIConfig) {
 	h.Server.Use(healthcheck.New())
 
 	get := h.Server.Group("/v1/preauth/get")
+	get.Use(auth.NewIPFilter(cfg.ApiAllowIPs))
 	get.Use(auth.NewPSK(cfg.GetPSK))
 	get.Get("/:id", h.GetPreAuth)
 }
