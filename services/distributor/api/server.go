@@ -23,7 +23,11 @@ type Handler struct {
 func Start(cfg config.APIConfig, service Service) error {
 	log.Printf("distributor server starting on :%s", cfg.Port)
 
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		EnableTrustedProxyCheck: true,
+		TrustedProxies:          cfg.ApiTrustedProxies,
+		ProxyHeader:             fiber.HeaderXForwardedFor,
+	})
 
 	h := &Handler{
 		Cfg:     cfg,

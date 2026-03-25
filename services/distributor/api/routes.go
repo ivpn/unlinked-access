@@ -11,7 +11,8 @@ import (
 func (h *Handler) SetupRoutes(cfg config.APIConfig) {
 	h.Server.Use(helmet.New())
 	h.Server.Use(healthcheck.New())
-	h.Server.Use(auth.NewPSK(cfg))
+	h.Server.Use(auth.NewIPFilter(cfg.ApiAllowIPs))
+	h.Server.Use(auth.NewPSK(cfg.PSK))
 	h.Server.Use(compress.New())
 
 	h.Server.Get("/v1/manifest", h.GetManifest)
