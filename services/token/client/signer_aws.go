@@ -62,7 +62,7 @@ func (s *SignerAWS) Generate(input string) (*model.HSMToken, error) {
 	}
 
 	generateInput := &kms.GenerateMacInput{
-		KeyId:        &s.Cfg.KeyId,
+		KeyId:        &s.Cfg.AWSKeyId,
 		Message:      digest[:],
 		MacAlgorithm: types.MacAlgorithmSpecHmacSha256,
 	}
