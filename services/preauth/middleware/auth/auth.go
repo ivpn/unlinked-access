@@ -11,7 +11,7 @@ func NewIPFilter(allowedIPs []string) fiber.Handler {
 
 	return func(c *fiber.Ctx) error {
 		clientIP := c.IP()
-		if slices.Contains(allowedIPs, clientIP) {
+		if slices.Contains(allowedIPs, clientIP) || c.IP() == "" {
 			return c.Next()
 		}
 
