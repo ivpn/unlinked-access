@@ -37,8 +37,12 @@ func Start(cfg config.APIConfig, service Service) error {
 	// Start /add server in a goroutine
 	go func() {
 		h := &Handler{
-			Cfg:       cfg,
-			Server:    fiber.New(),
+			Cfg: cfg,
+			Server: fiber.New(fiber.Config{
+				EnableTrustedProxyCheck: true,
+				TrustedProxies:          cfg.ApiTrustedProxies,
+				ProxyHeader:             fiber.HeaderXForwardedFor,
+			}),
 			Service:   service,
 			Validator: utils.NewValidator(),
 		}
@@ -52,8 +56,12 @@ func Start(cfg config.APIConfig, service Service) error {
 	// Start /get server in a goroutine
 	go func() {
 		h := &Handler{
-			Cfg:       cfg,
-			Server:    fiber.New(),
+			Cfg: cfg,
+			Server: fiber.New(fiber.Config{
+				EnableTrustedProxyCheck: true,
+				TrustedProxies:          cfg.ApiTrustedProxies,
+				ProxyHeader:             fiber.HeaderXForwardedFor,
+			}),
 			Service:   service,
 			Validator: utils.NewValidator(),
 		}
