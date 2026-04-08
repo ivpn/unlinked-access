@@ -11,7 +11,8 @@ import (
 )
 
 type Database struct {
-	Client *gorm.DB
+	Client    *gorm.DB
+	TableName string
 }
 
 func NewDB(cfg config.Config) (*Database, error) {
@@ -21,14 +22,15 @@ func NewDB(cfg config.Config) (*Database, error) {
 	}
 
 	if cfg.Service.SampleData {
-		err = migrate(db)
+		err = migrate(db, cfg.DB.Table)
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	return &Database{
-		Client: db,
+		Client:    db,
+		TableName: cfg.DB.Table,
 	}, nil
 }
 
@@ -58,8 +60,8 @@ func connect(cfg config.DBConfig) (*gorm.DB, error) {
 	return db, nil
 }
 
-func migrate(db *gorm.DB) error {
-	err := db.AutoMigrate(
+func migrate(db *gorm.DB, tableName string) error {
+	err := db.Table(tableName).AutoMigrate(
 		&model.Subscription{},
 	)
 	if err != nil {
