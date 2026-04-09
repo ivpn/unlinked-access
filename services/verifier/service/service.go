@@ -56,7 +56,6 @@ func (s *Service) Start() error {
 }
 
 func (s *Service) SyncManifest() error {
-	log.Println("syncing manifest...")
 	m, err := s.GetManifest()
 	if err != nil {
 		return err
@@ -107,7 +106,7 @@ func (s *Service) VerifyManifest(m model.Manifest) error {
 	err = s.Verifier.Verify(signature, data)
 	if err != nil {
 		if strings.Contains(err.Error(), "Status: 401") || strings.Contains(err.Error(), "Status: 403") {
-			log.Println("Re-authenticating Verifier session...")
+			log.Println("re-authenticating verifier session...")
 			err = s.Verifier.Authenticate()
 			if err == nil {
 				err = s.Verifier.Verify(signature, data)
@@ -151,7 +150,7 @@ func (s *Service) UpdateSubscriptions(m model.Manifest) error {
 			lastErr = err
 			continue
 		}
-		log.Printf("Updated %d subscriptions in store", len(updatedSubs))
+		log.Printf("updated %d subscriptions in store", len(updatedSubs))
 	}
 
 	return lastErr
