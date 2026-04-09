@@ -151,6 +151,7 @@ func (s *Service) UpdateSubscriptions(m model.Manifest) error {
 			lastErr = err
 			continue
 		}
+		log.Printf("Updated %d subscriptions in store", len(updatedSubs))
 	}
 
 	return lastErr
