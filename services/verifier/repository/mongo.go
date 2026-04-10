@@ -10,57 +10,84 @@ import (
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
+	"go.mongodb.org/mongo-driver/v2/mongo/readpref"
 	"ivpn.net/auth/services/verifier/config"
 	"ivpn.net/auth/services/verifier/model"
 )
 
+const (
+	DbConnTimeout       = 20 * time.Second
+	DbPingTimeout       = 20 * time.Second
+	DbDisconnectTimeout = 3 * time.Second
+)
+
 type MongoDB struct {
+	cfg            config.NoSQLDBConfig
 	Client         *mongo.Client
 	DBName         string
 	CollectionName string
 }
 
 func NewMongoDB(cfg config.Config) (*MongoDB, error) {
-	c := cfg.NoSQLDB
+	db := &MongoDB{
+		cfg:            cfg.NoSQLDB,
+		DBName:         cfg.NoSQLDB.Name,
+		CollectionName: cfg.NoSQLDB.Collection,
+	}
+	if err := db.connect(); err != nil {
+		return nil, err
+	}
+	return db, nil
+}
+
+func (m *MongoDB) connect() error {
+	c := m.cfg
 
 	var uri string
 	if strings.HasPrefix(c.Host, "mongodb://") || strings.HasPrefix(c.Host, "mongodb+srv://") {
-		// HOST is already a full connection string — use it directly
 		uri = c.Host
 	} else {
-		authSource := c.AuthSource
-		if authSource == "" {
-			authSource = "admin"
-		}
-		uri = fmt.Sprintf(
-			"mongodb://%s:%s@%s:%s/?authSource=%s",
-			c.User, c.Password, c.Host, c.Port, authSource,
-		)
+		uri = fmt.Sprintf("mongodb://%s:%s", c.Host, c.Port)
 	}
 
-	client, err := mongo.Connect(options.Client().ApplyURI(uri))
+	clientOpts := options.Client().ApplyURI(uri)
+	if c.User != "" && c.Password != "" {
+		clientOpts.SetAuth(buildCredentials(c))
+	}
+
+	client, err := mongo.Connect(clientOpts)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), DbPingTimeout)
 	defer cancel()
 
-	if err := client.Ping(ctx, nil); err != nil {
-		return nil, fmt.Errorf("MongoDB ping failed: %w", err)
+	if err := client.Ping(ctx, readpref.Primary()); err != nil {
+		return fmt.Errorf("MongoDB ping failed: %w", err)
 	}
 
 	log.Println("MongoDB connection OK")
+	m.Client = client
+	return nil
+}
 
-	return &MongoDB{
-		Client:         client,
-		DBName:         c.Name,
-		CollectionName: c.Collection,
-	}, nil
+func buildCredentials(c config.NoSQLDBConfig) options.Credential {
+	authSource := c.AuthSource
+	if authSource == "" {
+		authSource = "admin"
+	}
+	return options.Credential{
+		Username:   c.User,
+		Password:   c.Password,
+		AuthSource: authSource,
+	}
 }
 
 func (m *MongoDB) Close() error {
-	return m.Client.Disconnect(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), DbDisconnectTimeout)
+	defer cancel()
+	return m.Client.Disconnect(ctx)
 }
 
 func (m *MongoDB) collection() *mongo.Collection {
