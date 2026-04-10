@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/v2/bson"
@@ -22,10 +23,20 @@ type MongoDB struct {
 func NewMongoDB(cfg config.Config) (*MongoDB, error) {
 	c := cfg.NoSQLDB
 
-	uri := fmt.Sprintf(
-		"mongodb://%s:%s@%s:%s/?authSource=%s",
-		c.User, c.Password, c.Host, c.Port, c.AuthSource,
-	)
+	var uri string
+	if strings.HasPrefix(c.Host, "mongodb://") || strings.HasPrefix(c.Host, "mongodb+srv://") {
+		// HOST is already a full connection string — use it directly
+		uri = c.Host
+	} else {
+		authSource := c.AuthSource
+		if authSource == "" {
+			authSource = "admin"
+		}
+		uri = fmt.Sprintf(
+			"mongodb://%s:%s@%s:%s/?authSource=%s",
+			c.User, c.Password, c.Host, c.Port, authSource,
+		)
+	}
 
 	client, err := mongo.Connect(options.Client().ApplyURI(uri))
 	if err != nil {
