@@ -23,8 +23,8 @@ func NewMongoDB(cfg config.Config) (*MongoDB, error) {
 	c := cfg.NoSQLDB
 
 	uri := fmt.Sprintf(
-		"mongodb://%s:%s@%s:%s/?authSource=admin",
-		c.User, c.Password, c.Host, c.Port,
+		"mongodb://%s:%s@%s:%s/?authSource=%s",
+		c.User, c.Password, c.Host, c.Port, c.AuthSource,
 	)
 
 	client, err := mongo.Connect(options.Client().ApplyURI(uri))

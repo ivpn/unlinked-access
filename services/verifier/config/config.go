@@ -25,6 +25,7 @@ type NoSQLDBConfig struct {
 	User       string
 	Password   string
 	Collection string
+	AuthSource string
 }
 
 type ServiceConfig struct {
@@ -67,6 +68,7 @@ func New() (Config, error) {
 			User:       os.Getenv("CLIENT_DB_NOSQL_USER"),
 			Password:   os.Getenv("CLIENT_DB_NOSQL_PASSWORD"),
 			Collection: os.Getenv("CLIENT_DB_NOSQL_COLLECTION"),
+			AuthSource: os.Getenv("CLIENT_DB_NOSQL_AUTH_SOURCE"),
 		},
 		Service: ServiceConfig{
 			SampleData:         os.Getenv("SAMPLE_DATA") == "true",
