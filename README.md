@@ -1,5 +1,5 @@
-# Auth System
-Private Cross-Application Authentication System (PCAAS)
+# Zero Link Access
+Privacy-preserving cross-application authorization  
 
 ## Services
 
