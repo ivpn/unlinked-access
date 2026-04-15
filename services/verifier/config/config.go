@@ -18,6 +18,16 @@ type DBConfig struct {
 	Table    string
 }
 
+type NoSQLDBConfig struct {
+	Host       string
+	Port       string
+	Name       string
+	User       string
+	Password   string
+	Collection string
+	AuthSource string
+}
+
 type ServiceConfig struct {
 	SampleData         bool
 	Mock               bool
@@ -33,6 +43,7 @@ type ServiceConfig struct {
 type Config struct {
 	API     APIConfig
 	DB      DBConfig
+	NoSQLDB NoSQLDBConfig
 	Service ServiceConfig
 }
 
@@ -49,6 +60,15 @@ func New() (Config, error) {
 			User:     os.Getenv("CLIENT_DB_USER"),
 			Password: os.Getenv("CLIENT_DB_PASSWORD"),
 			Table:    os.Getenv("CLIENT_DB_TABLE"),
+		},
+		NoSQLDB: NoSQLDBConfig{
+			Host:       os.Getenv("CLIENT_DB_NOSQL_HOST"),
+			Port:       os.Getenv("CLIENT_DB_NOSQL_PORT"),
+			Name:       os.Getenv("CLIENT_DB_NOSQL_NAME"),
+			User:       os.Getenv("CLIENT_DB_NOSQL_USER"),
+			Password:   os.Getenv("CLIENT_DB_NOSQL_PASSWORD"),
+			Collection: os.Getenv("CLIENT_DB_NOSQL_COLLECTION"),
+			AuthSource: os.Getenv("CLIENT_DB_NOSQL_AUTH_SOURCE"),
 		},
 		Service: ServiceConfig{
 			SampleData:         os.Getenv("SAMPLE_DATA") == "true",

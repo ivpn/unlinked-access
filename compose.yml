@@ -103,6 +103,24 @@ services:
     networks:
       client:
 
+  client-db-nosql:
+    image: mongo
+    container_name: auth-client-db-nosql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 2s
+      timeout: 10s
+      retries: 5
+    environment:
+      MONGO_INITDB_DATABASE: ${CLIENT_DB_NOSQL_NAME}
+      MONGO_INITDB_ROOT_USERNAME: ${CLIENT_DB_NOSQL_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${CLIENT_DB_NOSQL_PASSWORD}
+    volumes:
+      - db-client-nosql:/data/db
+    networks:
+      client:
+
   redis:
     image: redis
     container_name: auth-redis
@@ -115,6 +133,7 @@ services:
 volumes:
   db:
   db-client:
+  db-client-nosql:
   redis:
   data:
 

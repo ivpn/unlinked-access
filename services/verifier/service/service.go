@@ -25,15 +25,15 @@ type Verifier interface {
 
 type Service struct {
 	Cfg      config.Config
-	Store    Store
+	Stores   []Store
 	Http     http.Http
 	Verifier Verifier
 }
 
-func New(cfg config.Config, store Store, verifier Verifier) (*Service, error) {
+func New(cfg config.Config, stores []Store, verifier Verifier) (*Service, error) {
 	return &Service{
 		Cfg:      cfg,
-		Store:    store,
+		Stores:   stores,
 		Verifier: verifier,
 		Http: http.Http{
 			Cfg: cfg.API,
@@ -56,7 +56,6 @@ func (s *Service) Start() error {
 }
 
 func (s *Service) SyncManifest() error {
-	log.Println("syncing manifest...")
 	m, err := s.GetManifest()
 	if err != nil {
 		return err
@@ -107,7 +106,7 @@ func (s *Service) VerifyManifest(m model.Manifest) error {
 	err = s.Verifier.Verify(signature, data)
 	if err != nil {
 		if strings.Contains(err.Error(), "Status: 401") || strings.Contains(err.Error(), "Status: 403") {
-			log.Println("Re-authenticating Verifier session...")
+			log.Println("re-authenticating verifier session...")
 			err = s.Verifier.Authenticate()
 			if err == nil {
 				err = s.Verifier.Verify(signature, data)
@@ -128,29 +127,33 @@ func (s *Service) VerifyManifest(m model.Manifest) error {
 }
 
 func (s *Service) UpdateSubscriptions(m model.Manifest) error {
-	subs, err := s.Store.GetSubscriptions()
-	if err != nil {
-		log.Printf("error fetching subscriptions: %v", err)
-		return err
-	}
-
-	var updatedSubs []model.Subscription
-	for _, sub := range subs {
-		updatedSub, err := UpdateSubscriptionFromManifest(sub, m.Subscriptions)
+	var lastErr error
+	for _, store := range s.Stores {
+		subs, err := store.GetSubscriptions()
 		if err != nil {
+			log.Printf("error fetching subscriptions from store: %v", err)
+			lastErr = err
 			continue
 		}
 
-		updatedSubs = append(updatedSubs, updatedSub)
+		var updatedSubs []model.Subscription
+		for _, sub := range subs {
+			updatedSub, err := UpdateSubscriptionFromManifest(sub, m.Subscriptions)
+			if err != nil {
+				continue
+			}
+			updatedSubs = append(updatedSubs, updatedSub)
+		}
+
+		if err := store.UpdateSubscriptions(updatedSubs); err != nil {
+			log.Printf("error saving updated subscriptions to store: %v", err)
+			lastErr = err
+			continue
+		}
+		log.Printf("updated %d subscriptions in store", len(updatedSubs))
 	}
 
-	err = s.Store.UpdateSubscriptions(updatedSubs)
-	if err != nil {
-		log.Printf("error saving updated subscriptions: %v", err)
-		return err
-	}
-
-	return nil
+	return lastErr
 }
 
 func UpdateSubscriptionFromManifest(sub model.Subscription, manifestSubs []model.Subscription) (model.Subscription, error) {
