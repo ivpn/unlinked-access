@@ -13,6 +13,7 @@ env:
   AUTH_VERIFIER: auth/verifier
   TAG: latest
   REGISTRY: ${{ secrets.REGISTRY_NAME }}
+  REGISTRY2: ${{ secrets.REGISTRY2_NAME }}
 
 jobs:
   deploy_production:
@@ -63,3 +64,15 @@ jobs:
 
       - name: Push auth verifier:${{ env.TAG }}
         run: docker push $REGISTRY/$AUTH_VERIFIER:$TAG
+
+      - name: Tag verifier for secondary registry
+        if: env.REGISTRY2 != ''
+        run: docker tag $REGISTRY/$AUTH_VERIFIER:$TAG $REGISTRY2/$AUTH_VERIFIER:$TAG
+
+      - name: Log in to secondary registry
+        if: env.REGISTRY2 != ''
+        run: echo "${{ secrets.REGISTRY2_PASSWORD }}" | docker login $REGISTRY2 -u ${{ secrets.REGISTRY2_USERNAME }} --password-stdin
+
+      - name: Push verifier to secondary registry
+        if: env.REGISTRY2 != ''
+        run: docker push $REGISTRY2/$AUTH_VERIFIER:$TAG
