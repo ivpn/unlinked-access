@@ -18,6 +18,16 @@ type DBConfig struct {
 	Table    string
 }
 
+type PGDBConfig struct {
+	Host     string
+	Port     string
+	Name     string
+	User     string
+	Password string
+	Table    string
+	SSLMode  string
+}
+
 type NoSQLDBConfig struct {
 	Host       string
 	Port       string
@@ -43,6 +53,7 @@ type ServiceConfig struct {
 type Config struct {
 	API     APIConfig
 	DB      DBConfig
+	PGDB    PGDBConfig
 	NoSQLDB NoSQLDBConfig
 	Service ServiceConfig
 }
@@ -60,6 +71,15 @@ func New() (Config, error) {
 			User:     os.Getenv("CLIENT_DB_USER"),
 			Password: os.Getenv("CLIENT_DB_PASSWORD"),
 			Table:    os.Getenv("CLIENT_DB_TABLE"),
+		},
+		PGDB: PGDBConfig{
+			Host:     os.Getenv("CLIENT_PGSQL_HOST"),
+			Port:     os.Getenv("CLIENT_PGSQL_PORT"),
+			Name:     os.Getenv("CLIENT_PGSQL_NAME"),
+			User:     os.Getenv("CLIENT_PGSQL_USER"),
+			Password: os.Getenv("CLIENT_PGSQL_PASSWORD"),
+			Table:    os.Getenv("CLIENT_PGSQL_TABLE"),
+			SSLMode:  os.Getenv("CLIENT_PGSQL_SSLMODE"),
 		},
 		NoSQLDB: NoSQLDBConfig{
 			Host:       os.Getenv("CLIENT_DB_NOSQL_HOST"),
