@@ -94,7 +94,7 @@ func (d *PostgresDB) UpdateSubscriptions(subs []model.Subscription) error {
 		ids = append(ids, fmt.Sprintf("'%s'", id))
 
 		isActiveCases.WriteString(fmt.Sprintf("WHEN '%s' THEN %t ", id, sub.IsActive))
-		activeUntilCases.WriteString(fmt.Sprintf("WHEN '%s' THEN '%s' ", id, sub.ActiveUntil.Format("2006-01-02 15:04:05")))
+		activeUntilCases.WriteString(fmt.Sprintf("WHEN '%s' THEN '%s'::timestamp ", id, sub.ActiveUntil.Format("2006-01-02 15:04:05")))
 		tierCases.WriteString(fmt.Sprintf("WHEN '%s' THEN '%s' ", id, sub.Tier))
 	}
 
