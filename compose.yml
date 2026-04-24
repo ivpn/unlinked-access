@@ -120,6 +120,24 @@ services:
       - db-client-nosql:/data/db
     networks:
       client:
+  
+  client-db-postgres:
+    image: postgres
+    container_name: auth-client-db-postgres
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${CLIENT_PGSQL_USER}"]
+      interval: 2s
+      timeout: 10s
+      retries: 5
+    environment:
+      POSTGRES_DB: ${CLIENT_PGSQL_NAME}
+      POSTGRES_USER: ${CLIENT_PGSQL_USER}
+      POSTGRES_PASSWORD: ${CLIENT_PGSQL_PASSWORD}
+    volumes:
+      - db-client-postgres:/var/lib/postgresql
+    networks:
+      client:
 
   redis:
     image: redis
@@ -134,6 +152,7 @@ volumes:
   db:
   db-client:
   db-client-nosql:
+  db-client-postgres:
   redis:
   data:
 
