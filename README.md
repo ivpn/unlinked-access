@@ -1,4 +1,4 @@
-# Zero Link Access
+# Unlinked Access
 Privacy-preserving cross-application authorization  
 
 ## Services
