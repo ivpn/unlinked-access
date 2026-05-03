@@ -104,7 +104,6 @@ func (h *Handler) AddPreAuth(c *fiber.Ctx) error {
 
 	sessionServices, err := h.Service.AddPreAuth(c.Context(), req.AccountID, req.IsActive, activeUntil, req.Tier)
 	if err != nil {
-		log.Println("failed to add pre-authentication:", err)
 		return c.Status(400).JSON(fiber.Map{
 			"error": AddPreAuthError,
 		})
