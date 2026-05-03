@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/gofiber/fiber/v2"
@@ -28,8 +29,11 @@ func (h Http) GetManifest() (model.Manifest, error) {
 	req.Set("Accept", "application/json")
 
 	status, body, errs := req.Bytes()
-	if len(errs) > 0 || status != fiber.StatusOK {
+	if len(errs) > 0 {
 		return model.Manifest{}, errs[0]
+	}
+	if status != fiber.StatusOK {
+		return model.Manifest{}, fmt.Errorf("unexpected status code: %d", status)
 	}
 
 	// Handle gzip decompression if needed

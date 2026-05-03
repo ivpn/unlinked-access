@@ -34,8 +34,16 @@ func main() {
 		stores = append(stores, mdb)
 	}
 
+	if cfg.PGDB.Host != "" {
+		pgdb, err := repository.NewPostgresDB(cfg)
+		if err != nil {
+			log.Fatal(err)
+		}
+		stores = append(stores, pgdb)
+	}
+
 	if len(stores) == 0 {
-		log.Fatal("no stores configured: set CLIENT_DB_HOST and/or CLIENT_DB_NOSQL_HOST")
+		log.Fatal("no stores configured: set CLIENT_DB_HOST, CLIENT_PGSQL_HOST and/or CLIENT_DB_NOSQL_HOST")
 	}
 
 	verifier, err := client.NewVerifierFortanix(cfg)
