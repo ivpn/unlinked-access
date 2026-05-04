@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type Subscription struct {
 	ID          string    `json:"id,omitempty" gorm:"column:id" bson:"_id,omitempty"`
