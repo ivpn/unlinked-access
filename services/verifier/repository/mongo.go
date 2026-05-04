@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
@@ -14,6 +15,40 @@ import (
 	"ivpn.net/auth/services/verifier/config"
 	"ivpn.net/auth/services/verifier/model"
 )
+
+// mongoSubscription is used for decoding MongoDB documents whose _id is stored
+// as a UUID binary (BSON subtype 0x04), which cannot be decoded directly into
+// a string field. It mirrors model.Subscription but uses bson.Binary for _id.
+type mongoSubscription struct {
+	ID          bson.Binary `bson:"_id,omitempty"`
+	TokenHash   string      `bson:"token_hash"`
+	IsActive    bool        `bson:"is_active"`
+	ActiveUntil time.Time   `bson:"active_until"`
+	Tier        string      `bson:"tier"`
+}
+
+func toModelSubscription(ms mongoSubscription) model.Subscription {
+	id, err := uuid.FromBytes(ms.ID.Data)
+	if err != nil {
+		// Fall back to raw hex representation so callers always get a non-empty ID.
+		id = uuid.UUID(ms.ID.Data)
+	}
+	return model.Subscription{
+		ID:          id.String(),
+		TokenHash:   ms.TokenHash,
+		IsActive:    ms.IsActive,
+		ActiveUntil: ms.ActiveUntil,
+		Tier:        ms.Tier,
+	}
+}
+
+func uuidBinaryFromString(id string) (bson.Binary, error) {
+	u, err := uuid.Parse(id)
+	if err != nil {
+		return bson.Binary{}, fmt.Errorf("invalid UUID %q: %w", id, err)
+	}
+	return bson.Binary{Subtype: 0x04, Data: u[:]}, nil
+}
 
 const (
 	DbConnTimeout       = 20 * time.Second
@@ -104,11 +139,15 @@ func (m *MongoDB) GetSubscriptions() ([]model.Subscription, error) {
 	}
 	defer cursor.Close(ctx)
 
-	var subs []model.Subscription
-	if err := cursor.All(ctx, &subs); err != nil {
+	var raw []mongoSubscription
+	if err := cursor.All(ctx, &raw); err != nil {
 		return nil, err
 	}
 
+	subs := make([]model.Subscription, len(raw))
+	for i, ms := range raw {
+		subs[i] = toModelSubscription(ms)
+	}
 	return subs, nil
 }
 
@@ -122,7 +161,12 @@ func (m *MongoDB) UpdateSubscriptions(subs []model.Subscription) error {
 
 	models := make([]mongo.WriteModel, 0, len(subs))
 	for _, sub := range subs {
-		filter := bson.D{{Key: "_id", Value: sub.ID}}
+		idBin, err := uuidBinaryFromString(sub.ID)
+		if err != nil {
+			log.Printf("skipping subscription with invalid ID %q: %v", sub.ID, err)
+			continue
+		}
+		filter := bson.D{{Key: "_id", Value: idBin}}
 		update := bson.D{{Key: "$set", Value: bson.D{
 			{Key: "is_active", Value: sub.IsActive},
 			{Key: "active_until", Value: sub.ActiveUntil},
