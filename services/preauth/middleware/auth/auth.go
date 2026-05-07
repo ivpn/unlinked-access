@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"log"
 	"slices"
 	"strings"
 
@@ -16,8 +15,6 @@ func NewIPFilter(allowedIPs []string) fiber.Handler {
 			return c.Next()
 		}
 
-		log.Println("Unauthorized IP: ", clientIP)
-
 		return c.SendStatus(fiber.StatusForbidden)
 	}
 }
@@ -28,8 +25,6 @@ func NewPSK(psk string) fiber.Handler {
 		if GetToken(c) == psk {
 			return c.Next()
 		}
-
-		log.Println("Unauthorized PSK: ", GetToken(c))
 
 		return c.SendStatus(fiber.StatusUnauthorized)
 	}
