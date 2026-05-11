@@ -175,11 +175,21 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 				accountUntil := account.ActiveUntil.UTC()
 				roundedUntil := time.Date(accountUntil.Year(), accountUntil.Month(), accountUntil.Day(), 12, 0, 0, 0, time.UTC)
 
+				var tier string
+				switch account.Product {
+				case "IVPN Standard":
+					tier = "Tier 1"
+				case "IVPN Pro":
+					tier = "Tier 3"
+				default:
+					tier = account.Product
+				}
+
 				results <- model.Subscription{
 					TokenHash:   base64.StdEncoding.EncodeToString(tokenHash[:]),
 					IsActive:    account.IsActive,
 					ActiveUntil: roundedUntil,
-					Tier:        account.Product,
+					Tier:        tier,
 				}
 			}
 		}(w)
