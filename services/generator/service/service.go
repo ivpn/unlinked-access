@@ -178,9 +178,9 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 				var tier string
 				switch account.Product {
 				case "IVPN Standard":
-					tier = "Tier 1"
+					tier = "IVPN Tier 1"
 				case "IVPN Pro":
-					tier = "Tier 3"
+					tier = "IVPN Tier 3"
 				default:
 					tier = account.Product
 				}
