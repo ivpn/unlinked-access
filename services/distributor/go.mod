@@ -2,7 +2,7 @@ module ivpn.net/auth/services/distributor
 
 go 1.24.5
 
-require github.com/gofiber/fiber/v2 v2.52.9
+require github.com/gofiber/fiber/v2 v2.52.13
 
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
