@@ -10,6 +10,8 @@ services:
     restart: unless-stopped
     networks:
       server:
+    volumes:
+      - ./certs:/certs:ro
 
   generator:
     build:
@@ -25,6 +27,7 @@ services:
       server:
     volumes:
       - data:/app/data
+      - ./certs:/certs:ro
 
   distributor:
     build:
@@ -52,6 +55,8 @@ services:
       - ${PREAUTH_GET_PORT}:${PREAUTH_GET_PORT}
     networks:
       server:
+    volumes:
+      - ./certs:/certs:ro
   
   verifier:
     build:

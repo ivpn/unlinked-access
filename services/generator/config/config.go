@@ -14,8 +14,12 @@ type DBConfig struct {
 }
 
 type TokenServerConfig struct {
-	Host string
-	Port string
+	Host          string
+	Port          string
+	TLSEnabled    bool
+	TLSCACertFile string
+	TLSCertFile   string
+	TLSKeyFile    string
 }
 
 type ServiceConfig struct {
@@ -38,8 +42,12 @@ func New() (Config, error) {
 
 	return Config{
 		TokenServer: TokenServerConfig{
-			Host: os.Getenv("TOKEN_HOST"),
-			Port: os.Getenv("TOKEN_PORT"),
+			Host:          os.Getenv("TOKEN_HOST"),
+			Port:          os.Getenv("TOKEN_PORT"),
+			TLSEnabled:    os.Getenv("TOKEN_TLS_ENABLED") == "true",
+			TLSCACertFile: os.Getenv("TOKEN_TLS_CLIENT_CA_FILE"),
+			TLSCertFile:   os.Getenv("TOKEN_TLS_CLIENT_CERT_FILE"),
+			TLSKeyFile:    os.Getenv("TOKEN_TLS_CLIENT_KEY_FILE"),
 		},
 		DB: DBConfig{
 			Host:     os.Getenv("SERVER_DB_HOST"),

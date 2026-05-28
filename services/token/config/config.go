@@ -13,6 +13,11 @@ type Config struct {
 	FortanixEndpoint   string
 	FortanixApiKey     string
 	FortanixKeyId      string
+	TLSEnabled         bool
+	TLSCertFile        string
+	TLSKeyFile         string
+	TLSCAFile          string
+	Debug              bool
 }
 
 func New() (Config, error) {
@@ -27,5 +32,10 @@ func New() (Config, error) {
 		FortanixEndpoint:   os.Getenv("FORTANIX_ENDPOINT"),
 		FortanixApiKey:     os.Getenv("FORTANIX_API_KEY"),
 		FortanixKeyId:      os.Getenv("FORTANIX_KEY_ID"),
+		TLSEnabled:         os.Getenv("TOKEN_TLS_ENABLED") == "true",
+		TLSCertFile:        os.Getenv("TOKEN_TLS_CERT_FILE"),
+		TLSKeyFile:         os.Getenv("TOKEN_TLS_KEY_FILE"),
+		TLSCAFile:          os.Getenv("TOKEN_TLS_CA_FILE"),
+		Debug:              os.Getenv("TOKEN_DEBUG") == "true",
 	}, nil
 }

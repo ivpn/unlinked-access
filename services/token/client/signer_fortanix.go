@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/fortanix/sdkms-client-go/sdkms"
 	"ivpn.net/auth/services/token/config"
@@ -18,9 +19,10 @@ type SignerFortanix struct {
 }
 
 func NewSignerFortanix(cfg config.Config) (*SignerFortanix, error) {
+	httpClient := &http.Client{Timeout: 30 * time.Second}
 	client := sdkms.Client{
 		Endpoint:   cfg.FortanixEndpoint,
-		HTTPClient: http.DefaultClient,
+		HTTPClient: httpClient,
 	}
 
 	_, err := client.AuthenticateWithAPIKey(context.Background(), cfg.FortanixApiKey)
@@ -34,12 +36,10 @@ func NewSignerFortanix(cfg config.Config) (*SignerFortanix, error) {
 	}, nil
 }
 
-func (s *SignerFortanix) Generate(input string) (*model.HSMToken, error) {
+func (s *SignerFortanix) Generate(ctx context.Context, input string) (*model.HSMToken, error) {
 	if input == "" {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
-
-	// start := time.Now()
 
 	digest := sha512.Sum512([]byte(input))
 	data := sdkms.Blob(digest[:])
@@ -58,13 +58,10 @@ func (s *SignerFortanix) Generate(input string) (*model.HSMToken, error) {
 		Key:  sdkms.SobjectByID(keyId),
 	}
 
-	res, err := s.Client.Mac(context.Background(), req)
+	res, err := s.Client.Mac(ctx, req)
 	if err != nil {
 		return nil, err
 	}
-
-	// elapsed := time.Since(start)
-	// log.Printf("Token() completed in %s", elapsed)
 
 	return &model.HSMToken{
 		Token: base64.StdEncoding.EncodeToString(res.Mac),
@@ -76,7 +73,7 @@ func (s *SignerFortanix) Authenticate() error {
 	return err
 }
 
-func (s *SignerFortanix) Verify(data [64]byte, signature string) (bool, error) {
+func (s *SignerFortanix) Verify(ctx context.Context, data [64]byte, signature string) (bool, error) {
 	sigData, err := base64.StdEncoding.DecodeString(signature)
 	if err != nil {
 		return false, err
@@ -92,7 +89,7 @@ func (s *SignerFortanix) Verify(data [64]byte, signature string) (bool, error) {
 		Key:  sdkms.SobjectByID(keyId),
 	}
 
-	res, err := s.Client.MacVerify(context.Background(), req)
+	res, err := s.Client.MacVerify(ctx, req)
 	if err != nil {
 		return false, err
 	}

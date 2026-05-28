@@ -13,17 +13,17 @@ import (
 func main() {
 	cfg, err := config.New()
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 
 	db, err := repository.NewDB(cfg)
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 
 	tokenClient, err := client.New(cfg.TokenServer)
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 
 	service := service.New(cfg, db, tokenClient)
@@ -34,7 +34,7 @@ func main() {
 		switch args[1] {
 		case "sync":
 			if err := service.Generate(); err != nil {
-				log.Println(err)
+				log.Fatal(err)
 			}
 			return
 
@@ -47,8 +47,7 @@ func main() {
 		}
 	}
 
-	err = service.Start()
-	if err != nil {
-		log.Println(err)
+	if err = service.Start(); err != nil {
+		log.Fatal(err)
 	}
 }

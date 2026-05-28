@@ -13,23 +13,22 @@ import (
 func main() {
 	cfg, err := config.New()
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 
 	redis, err := repository.New(cfg.Redis)
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 
 	tokenClient, err := client.New(cfg.TokenServer)
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 
 	service := service.New(cfg, redis, tokenClient)
 
-	err = api.Start(cfg.API, service)
-	if err != nil {
-		log.Println(err)
+	if err = api.Start(cfg.API, service); err != nil {
+		log.Fatal(err)
 	}
 }

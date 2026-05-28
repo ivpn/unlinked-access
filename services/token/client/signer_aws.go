@@ -14,9 +14,7 @@ import (
 	"ivpn.net/auth/services/token/model"
 )
 
-var (
-	ErrEmptyInput = "input string cannot be empty"
-)
+const ErrEmptyInput = "input string cannot be empty"
 
 type SignerAWS struct {
 	Cfg    *config.Config
@@ -46,12 +44,10 @@ func NewSignerAWS(cfg config.Config) (*SignerAWS, error) {
 	}, nil
 }
 
-func (s *SignerAWS) Generate(input string) (*model.HSMToken, error) {
+func (s *SignerAWS) Generate(ctx context.Context, input string) (*model.HSMToken, error) {
 	if input == "" {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
-
-	// start := time.Now()
 
 	digest := sha512.Sum512([]byte(input))
 
@@ -67,15 +63,16 @@ func (s *SignerAWS) Generate(input string) (*model.HSMToken, error) {
 		MacAlgorithm: types.MacAlgorithmSpecHmacSha256,
 	}
 
-	signOut, err := s.Client.GenerateMac(context.Background(), generateInput)
+	signOut, err := s.Client.GenerateMac(ctx, generateInput)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign input: %w", err)
 	}
 
-	// elapsed := time.Since(start)
-	// log.Printf("Token() completed in %s", elapsed)
-
 	return &model.HSMToken{
 		Token: base64.StdEncoding.EncodeToString(signOut.Mac),
 	}, nil
+}
+
+func (s *SignerAWS) Authenticate() error {
+	return nil
 }
