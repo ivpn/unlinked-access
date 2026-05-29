@@ -10,6 +10,10 @@ import (
 func NewIPFilter(allowedIPs []string) fiber.Handler {
 
 	return func(c *fiber.Ctx) error {
+		if slices.Contains(allowedIPs, "*") {
+			return c.Next()
+		}
+
 		clientIP := c.IP()
 		if slices.Contains(allowedIPs, clientIP) {
 			return c.Next()
