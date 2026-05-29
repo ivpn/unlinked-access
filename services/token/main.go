@@ -13,6 +13,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	if err = cfg.Validate(); err != nil {
+		log.Fatal(err)
+	}
 
 	signer, err := client.NewSignerFortanix(cfg)
 	if err != nil {

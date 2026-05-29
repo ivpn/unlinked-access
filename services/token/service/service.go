@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
-	"strings"
 	"time"
 
+	"github.com/fortanix/sdkms-client-go/sdkms"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
@@ -128,10 +129,13 @@ func (s *Server) Generate(ctx context.Context, req *proto.Request) (*proto.Respo
 	return &proto.Response{Token: token.Token}, nil
 }
 
-// isAuthError detects HSM session expiry responses.
+// isAuthError detects HSM session expiry by inspecting the SDK's typed BackendError.
 func isAuthError(err error) bool {
-	msg := err.Error()
-	return strings.Contains(msg, "Status: 401") || strings.Contains(msg, "Status: 403")
+	var be *sdkms.BackendError
+	if errors.As(err, &be) {
+		return be.StatusCode == http.StatusUnauthorized || be.StatusCode == http.StatusForbidden
+	}
+	return false
 }
 
 func (s *Server) generateToken(ctx context.Context, input string) (*model.HSMToken, error) {
