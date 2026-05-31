@@ -5,6 +5,8 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -94,6 +96,7 @@ func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive boo
 
 	// Post session to webhooks
 	services := make([]model.SessionService, len(s.Cfg.API.SessionURLs))
+	var webhookErrs []error
 	for i, url := range s.Cfg.API.SessionURLs {
 		session := model.Session{
 			ID:        uuid.New().String(),
@@ -102,15 +105,24 @@ func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive boo
 		}
 
 		psk := s.Cfg.API.SessionPSKs[i]
-		err = s.Http.PostSession(session, url, psk)
-		if err != nil {
+		if err = s.Http.PostSession(session, url, psk); err != nil {
 			log.Println("failed to post session to ", url, ", error:", err)
+			webhookErrs = append(webhookErrs, fmt.Errorf("%s: %w", url, err))
+			continue
 		}
 
 		services[i] = model.SessionService{
 			Name:      s.Cfg.API.SessionServices[i],
 			SessionId: session.ID,
 		}
+	}
+
+	if len(webhookErrs) > 0 {
+		// Roll back the PreAuth stored in Redis to avoid orphaned entries
+		if delErr := s.Cache.Del(ctx, "preauth_"+pa.ID); delErr != nil {
+			log.Println("failed to rollback pre-auth from cache:", delErr)
+		}
+		return nil, errors.Join(webhookErrs...)
 	}
 
 	return services, nil

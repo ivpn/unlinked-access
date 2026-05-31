@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 
 	"google.golang.org/grpc"
@@ -57,6 +58,10 @@ func connect(cfg config.TokenServerConfig) (*grpc.ClientConn, error) {
 		}
 		creds = grpc.WithTransportCredentials(credentials.NewTLS(tlsCfg))
 	} else {
+		if os.Getenv("PREAUTH_ALLOW_INSECURE") != "true" {
+			return nil, errors.New("TLS is disabled but PREAUTH_ALLOW_INSECURE is not set to 'true'; refusing insecure connection")
+		}
+		log.Println("WARNING: gRPC connection to token server is unencrypted (TLS disabled)")
 		creds = grpc.WithTransportCredentials(insecure.NewCredentials())
 	}
 

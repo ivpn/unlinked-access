@@ -16,6 +16,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if err := cfg.Validate(); err != nil {
+		log.Fatal("configuration error: ", err)
+	}
+
 	redis, err := repository.New(cfg.Redis)
 	if err != nil {
 		log.Fatal(err)
