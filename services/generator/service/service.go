@@ -2,16 +2,18 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
-	"math/rand"
+	"math/big"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
@@ -149,6 +151,7 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 	jobs := make(chan *model.Account, len(accounts))
 	results := make(chan model.Subscription, len(accounts))
 	var wg sync.WaitGroup
+	var failedCount atomic.Int64
 
 	// Start workers
 	for w := range workerCount {
@@ -159,12 +162,15 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 				// Wait for limiter before each Sign call
 				if err := limiter.Wait(ctx); err != nil {
 					log.Printf("[worker %d] limiter error: %v", workerID, err)
+					failedCount.Add(1)
 					continue
 				}
 
 				// Generate token for account ID
 				token, err := s.Token.GenerateToken(account.ID)
 				if err != nil {
+					log.Printf("[worker %d] failed to generate token for account %s: %v", workerID, account.ID, err)
+					failedCount.Add(1)
 					continue
 				}
 
@@ -213,11 +219,14 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 		signedSubs = append(signedSubs, sub)
 	}
 
-	// Randomize order
-	r := rand.New(rand.NewSource(time.Now().UnixNano()))
-	r.Shuffle(len(signedSubs), func(i, j int) {
-		signedSubs[i], signedSubs[j] = signedSubs[j], signedSubs[i]
-	})
+	if n := failedCount.Load(); n > 0 {
+		return nil, fmt.Errorf("%d account(s) failed token generation; manifest not saved", n)
+	}
+
+	// Randomize order using crypto/rand to prevent correlation across manifest versions
+	if err := cryptoShuffle(signedSubs); err != nil {
+		return nil, fmt.Errorf("shuffle failed: %w", err)
+	}
 
 	log.Printf("signed %d subscriptions in %s with %d workers (limit: %d TPS)\n", len(signedSubs), time.Since(start), workerCount, s.Cfg.Service.TPS)
 
@@ -277,8 +286,21 @@ func (s *Service) SignManifest(m *model.Manifest) error {
 
 	m.Signature = signature
 
-	log.Printf("manifest signed: %s", m.Signature)
+	log.Println("manifest signed successfully")
 
+	return nil
+}
+
+// cryptoShuffle performs a Fisher-Yates shuffle using crypto/rand.
+func cryptoShuffle(subs []model.Subscription) error {
+	for i := len(subs) - 1; i > 0; i-- {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(i+1)))
+		if err != nil {
+			return err
+		}
+		j := n.Int64()
+		subs[i], subs[j] = subs[j], subs[i]
+	}
 	return nil
 }
 

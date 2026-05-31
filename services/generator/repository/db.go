@@ -3,6 +3,7 @@ package repository
 import (
 	"log"
 
+	mysqldrv "github.com/go-sql-driver/mysql"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -44,13 +45,24 @@ func (d *Database) Close() error {
 }
 
 func connect(cfg config.DBConfig) (*gorm.DB, error) {
-	config := &gorm.Config{
+	gormCfg := &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	}
 
-	dsn := cfg.User + ":" + cfg.Password + "@tcp(" + cfg.Host + ":" + cfg.Port + ")/" + cfg.Name + "?charset=utf8mb4&parseTime=True&loc=Local"
+	dsnCfg := mysqldrv.Config{
+		User:                 cfg.User,
+		Passwd:               cfg.Password,
+		Net:                  "tcp",
+		Addr:                 cfg.Host + ":" + cfg.Port,
+		DBName:               cfg.Name,
+		Params:               map[string]string{"charset": "utf8mb4"},
+		ParseTime:            true,
+		Loc:                  nil, // use UTC
+		AllowNativePasswords: true,
+	}
+	dsn := dsnCfg.FormatDSN()
 
-	db, err := gorm.Open(mysql.Open(dsn), config)
+	db, err := gorm.Open(mysql.Open(dsn), gormCfg)
 	if err != nil {
 		return nil, err
 	}
