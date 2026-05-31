@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"crypto/subtle"
 	"slices"
 	"strings"
 
@@ -26,7 +27,7 @@ func NewIPFilter(allowedIPs []string) fiber.Handler {
 func NewPSK(psk string) fiber.Handler {
 
 	return func(c *fiber.Ctx) error {
-		if GetToken(c) == psk {
+		if subtle.ConstantTimeCompare([]byte(GetToken(c)), []byte(psk)) == 1 {
 			return c.Next()
 		}
 

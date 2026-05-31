@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"os"
 	"strings"
 )
@@ -28,4 +29,15 @@ func New() (Config, error) {
 			ApiAllowIPs:       apiAllowIPs,
 		},
 	}, nil
+}
+
+// Validate checks that all required configuration values are present.
+func (c Config) Validate() error {
+	if c.API.Port == "" {
+		return errors.New("required env var not set: DISTRIBUTOR_PORT")
+	}
+	if c.API.PSK == "" {
+		return errors.New("required env var not set: DISTRIBUTOR_PSK")
+	}
+	return nil
 }

@@ -11,13 +11,17 @@ import (
 func main() {
 	cfg, err := config.New()
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
+	}
+
+	if err := cfg.Validate(); err != nil {
+		log.Fatal("configuration error: ", err)
 	}
 
 	service := service.New(cfg)
 
 	err = api.Start(cfg.API, service)
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 }
