@@ -73,7 +73,10 @@ func (s *VerifierAWS) Verify(signature string, data []byte) error {
 		MacAlgorithm: types.MacAlgorithmSpecHmacSha256,
 	}
 
-	verifyOut, _ := s.Client.VerifyMac(context.Background(), verifyInput)
+	verifyOut, err := s.Client.VerifyMac(context.Background(), verifyInput)
+	if err != nil {
+		return fmt.Errorf("KMS VerifyMac failed: %w", err)
+	}
 	if verifyOut == nil {
 		return fmt.Errorf("error verifying manifest signature: verifyOut is nil")
 	}
@@ -84,4 +87,10 @@ func (s *VerifierAWS) Verify(signature string, data []byte) error {
 	log.Println("manifest signature OK")
 
 	return nil
+}
+
+// IsAuthError always returns false for AWS KMS — authentication is handled via IAM credentials,
+// not per-request session tokens.
+func (s *VerifierAWS) IsAuthError(_ error) bool {
+	return false
 }

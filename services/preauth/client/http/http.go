@@ -1,7 +1,9 @@
 package http
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -21,15 +23,20 @@ func New(cfg config.APIConfig) *Http {
 }
 
 func (h Http) PostSession(session model.Session, url string, psk string) error {
+	body, err := json.Marshal(session)
+	if err != nil {
+		return fmt.Errorf("failed to marshal session: %w", err)
+	}
+
 	req := fiber.Post(url)
 	req.Set("Content-Type", "application/json")
 	req.Set("Accept", "application/json")
 	req.Set("Authorization", "Bearer "+psk)
-	req.Body([]byte(`{"id": "` + session.ID + `", "token": "` + session.Token + `", "preauth_id": "` + session.PreAuthID + `"}`))
+	req.Body(body)
 
-	status, res, err := req.Bytes()
-	if err != nil {
-		log.Printf("Error calling session webhook: %v", err)
+	status, res, errs := req.Bytes()
+	if len(errs) > 0 {
+		log.Printf("Error calling session webhook: %v", errs)
 		return errors.New("error calling session webhook")
 	}
 

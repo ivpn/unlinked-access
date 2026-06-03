@@ -11,17 +11,19 @@ import (
 func main() {
 	cfg, err := config.New()
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
+	}
+	if err = cfg.Validate(); err != nil {
+		log.Fatal(err)
 	}
 
 	signer, err := client.NewSignerFortanix(cfg)
 	if err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 
 	server := service.New(signer, cfg)
-	err = server.Start()
-	if err != nil {
-		log.Println(err)
+	if err = server.Start(); err != nil {
+		log.Fatal(err)
 	}
 }

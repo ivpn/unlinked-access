@@ -43,7 +43,33 @@ func New(cfg config.RedisConfig) (*Redis, error) {
 func newClient(cfg config.RedisConfig) (*redis.Client, error) {
 	log.Println("creating Redis client")
 	options := &redis.Options{
-		Addr: cfg.Addr,
+		Addr:     cfg.Addr,
+		Username: cfg.Username,
+		Password: cfg.Password,
+	}
+
+	if cfg.TLSEnabled {
+		log.Println("using TLS to connect to Redis")
+
+		cert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load client certificate: %v", err)
+		}
+
+		caCert, err := os.ReadFile(cfg.CACertFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load CA certificate: %v", err)
+		}
+
+		caCertPool := x509.NewCertPool()
+		if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
+			return nil, fmt.Errorf("failed to append CA certificate")
+		}
+
+		options.TLSConfig = &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			RootCAs:      caCertPool,
+		}
 	}
 
 	return redis.NewClient(options), nil
@@ -80,9 +106,8 @@ func newFailoverClient(cfg config.RedisConfig) (*redis.Client, error) {
 		}
 
 		options.TLSConfig = &tls.Config{
-			Certificates:       []tls.Certificate{cert},
-			RootCAs:            caCertPool,
-			InsecureSkipVerify: cfg.TLSInsecureSkipVerify, // Only for testing, use false in production
+			Certificates: []tls.Certificate{cert},
+			RootCAs:      caCertPool,
 		}
 	}
 

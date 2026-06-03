@@ -3,7 +3,6 @@ package repository
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -47,7 +46,7 @@ func (d *PostgresDB) Close() error {
 func connectPostgres(cfg config.PGDBConfig) (*gorm.DB, error) {
 	sslMode := cfg.SSLMode
 	if sslMode == "" {
-		sslMode = "disable"
+		sslMode = "require"
 	}
 
 	dsn := fmt.Sprintf(
@@ -86,27 +85,19 @@ func (d *PostgresDB) UpdateSubscriptions(subs []model.Subscription) error {
 		return nil
 	}
 
-	var ids []string
-	var isActiveCases, activeUntilCases, tierCases strings.Builder
-
-	for _, sub := range subs {
-		id := sub.ID
-		ids = append(ids, fmt.Sprintf("'%s'", id))
-
-		isActiveCases.WriteString(fmt.Sprintf("WHEN '%s' THEN %t ", id, sub.IsActive))
-		activeUntilCases.WriteString(fmt.Sprintf("WHEN '%s' THEN '%s'::timestamp ", id, sub.ActiveUntil.Format("2006-01-02 15:04:05")))
-		tierCases.WriteString(fmt.Sprintf("WHEN '%s' THEN '%s' ", id, sub.Tier))
-	}
-
-	sql := fmt.Sprintf(`
-		UPDATE %s
-		SET
-			updated_at = NOW(),
-			is_active = CASE id %s END,
-			active_until = CASE id %s END,
-			tier = CASE id %s END
-		WHERE id IN (%s);
-	`, d.TableName, isActiveCases.String(), activeUntilCases.String(), tierCases.String(), strings.Join(ids, ","))
-
-	return d.Client.Exec(sql).Error
+	return d.Client.Transaction(func(tx *gorm.DB) error {
+		for _, sub := range subs {
+			result := tx.Table(d.TableName).
+				Where("id = ?", sub.ID).
+				Updates(map[string]interface{}{
+					"is_active":    sub.IsActive,
+					"active_until": sub.ActiveUntil,
+					"tier":         sub.Tier,
+				})
+			if result.Error != nil {
+				return result.Error
+			}
+		}
+		return nil
+	})
 }

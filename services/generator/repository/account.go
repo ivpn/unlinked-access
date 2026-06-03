@@ -34,8 +34,12 @@ func (d *Database) GetAccounts() ([]*model.Account, error) {
 func (d *Database) GetAccountsMock(count int) ([]*model.Account, error) {
 	accounts := make([]*model.Account, count)
 	for i := range count {
+		id, err := randomId()
+		if err != nil {
+			return nil, fmt.Errorf("GetAccountsMock: %w", err)
+		}
 		accounts[i] = &model.Account{
-			ID:          randomId(),
+			ID:          id,
 			CreatedAt:   time.Now(),
 			IsActive:    true,
 			ActiveUntil: time.Now().AddDate(0, i%12+1, 0), // Active for x months
@@ -69,7 +73,7 @@ func (d *Database) PostAccount(account *model.Account) error {
 	return d.Client.Create(account).Error
 }
 
-func randomId() string {
+func randomId() (string, error) {
 	// Generate a random ID, e.g., i-1234-ABCD-XYQZ
 	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	var id strings.Builder
@@ -78,23 +82,32 @@ func randomId() string {
 	max := big.NewInt(int64(len(charset)))
 
 	for i := range 4 {
-		n, _ := rand.Int(rand.Reader, max)
+		n, err := rand.Int(rand.Reader, max)
+		if err != nil {
+			return "", fmt.Errorf("randomId: crypto/rand failed: %w", err)
+		}
 		id.WriteByte(charset[n.Int64()])
 		if i == 3 {
 			id.WriteByte('-')
 		}
 	}
 	for i := range 4 {
-		n, _ := rand.Int(rand.Reader, max)
+		n, err := rand.Int(rand.Reader, max)
+		if err != nil {
+			return "", fmt.Errorf("randomId: crypto/rand failed: %w", err)
+		}
 		id.WriteByte(charset[n.Int64()])
 		if i == 3 {
 			id.WriteByte('-')
 		}
 	}
 	for range 4 {
-		n, _ := rand.Int(rand.Reader, max)
+		n, err := rand.Int(rand.Reader, max)
+		if err != nil {
+			return "", fmt.Errorf("randomId: crypto/rand failed: %w", err)
+		}
 		id.WriteByte(charset[n.Int64()])
 	}
 
-	return id.String()
+	return id.String(), nil
 }

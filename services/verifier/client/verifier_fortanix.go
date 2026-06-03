@@ -5,9 +5,11 @@ import (
 	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/fortanix/sdkms-client-go/sdkms"
 	"ivpn.net/auth/services/verifier/config"
@@ -21,7 +23,7 @@ type VerifierFortanix struct {
 func NewVerifierFortanix(cfg config.Config) (*VerifierFortanix, error) {
 	client := sdkms.Client{
 		Endpoint:   cfg.Service.FortanixEndpoint,
-		HTTPClient: http.DefaultClient,
+		HTTPClient: &http.Client{Timeout: 30 * time.Second},
 	}
 
 	_, err := client.AuthenticateWithAPIKey(context.Background(), cfg.Service.FortanixApiKey)
@@ -85,4 +87,13 @@ func (s *VerifierFortanix) Verify(signature string, data []byte) error {
 func (s *VerifierFortanix) Authenticate() error {
 	_, err := s.Client.AuthenticateWithAPIKey(context.Background(), s.Cfg.Service.FortanixApiKey)
 	return err
+}
+
+// IsAuthError returns true when err is a Fortanix BackendError with HTTP status 401 or 403.
+func (s *VerifierFortanix) IsAuthError(err error) bool {
+	var be *sdkms.BackendError
+	if errors.As(err, &be) {
+		return be.StatusCode == 401 || be.StatusCode == 403
+	}
+	return false
 }

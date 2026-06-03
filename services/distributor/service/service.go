@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -31,21 +32,20 @@ func (s *Service) GetManifest() (model.Manifest, error) {
 	// Open the JSON file
 	file, err := os.Open(path)
 	if err != nil {
-		log.Println("failed to open file:", err)
+		return model.Manifest{}, fmt.Errorf("failed to open manifest: %w", err)
 	}
 	defer file.Close()
 
 	// Read file contents
 	bytes, err := io.ReadAll(file)
 	if err != nil {
-		log.Println("failed to read file:", err)
+		return model.Manifest{}, fmt.Errorf("failed to read manifest: %w", err)
 	}
 
 	// Unmarshal JSON into Manifest struct
 	var manifest model.Manifest
-	err = json.Unmarshal(bytes, &manifest)
-	if err != nil {
-		log.Println("failed to unmarshal JSON:", err)
+	if err = json.Unmarshal(bytes, &manifest); err != nil {
+		return model.Manifest{}, fmt.Errorf("failed to unmarshal manifest: %w", err)
 	}
 
 	return manifest, nil
