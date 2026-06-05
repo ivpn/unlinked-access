@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"ivpn.net/auth/services/preauth/config"
@@ -8,6 +9,14 @@ import (
 )
 
 func (h *Handler) SetupRoutesAdd(cfg config.APIConfig) {
+	h.Server.Get("/debug-ip", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"ip":              c.IP(),
+			"x-forwarded-for": c.Get("X-Forwarded-For"),
+			"x-real-ip":       c.Get("X-Real-IP"),
+		})
+	})
+
 	h.Server.Use(helmet.New())
 	h.Server.Use(healthcheck.New())
 
@@ -18,6 +27,14 @@ func (h *Handler) SetupRoutesAdd(cfg config.APIConfig) {
 }
 
 func (h *Handler) SetupRoutesGet(cfg config.APIConfig) {
+	h.Server.Get("/debug-ip", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"ip":              c.IP(),
+			"x-forwarded-for": c.Get("X-Forwarded-For"),
+			"x-real-ip":       c.Get("X-Real-IP"),
+		})
+	})
+
 	h.Server.Use(helmet.New())
 	h.Server.Use(healthcheck.New())
 
