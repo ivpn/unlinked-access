@@ -20,7 +20,7 @@ func NewIPFilter(allowedIPs []string) fiber.Handler {
 			return c.Next()
 		}
 
-		return c.SendStatus(fiber.StatusForbidden)
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Forbidden"})
 	}
 }
 
@@ -31,7 +31,7 @@ func NewPSK(psk string) fiber.Handler {
 			return c.Next()
 		}
 
-		return c.SendStatus(fiber.StatusUnauthorized)
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
 	}
 }
 
