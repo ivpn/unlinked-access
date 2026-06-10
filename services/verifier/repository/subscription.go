@@ -41,22 +41,6 @@ func (d *Database) UpdateSubscriptions(subs []model.Subscription) error {
 	`, d.TableName, isActiveCases.String(), activeUntilCases.String(), tierCases.String(), strings.Join(ids, ","))
 
 	return d.Client.Exec(sql).Error
-
-	// return d.Client.Transaction(func(tx *gorm.DB) error {
-	// 	for _, sub := range subs {
-	// 		result := tx.Table(d.TableName).
-	// 			Where("id = ?", sub.ID).
-	// 			Updates(map[string]any{
-	// 				"is_active":    sub.IsActive,
-	// 				"active_until": sub.ActiveUntil,
-	// 				"tier":         sub.Tier,
-	// 			})
-	// 		if result.Error != nil {
-	// 			return result.Error
-	// 		}
-	// 	}
-	// 	return nil
-	// })
 }
 
 func joinInt64s(ids []int64) string {
