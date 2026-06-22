@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"os"
 	"strconv"
 )
@@ -14,8 +15,12 @@ type DBConfig struct {
 }
 
 type TokenServerConfig struct {
-	Host string
-	Port string
+	Host          string
+	Port          string
+	TLSEnabled    bool
+	TLSCACertFile string
+	TLSCertFile   string
+	TLSKeyFile    string
 }
 
 type ServiceConfig struct {
@@ -38,8 +43,12 @@ func New() (Config, error) {
 
 	return Config{
 		TokenServer: TokenServerConfig{
-			Host: os.Getenv("TOKEN_HOST"),
-			Port: os.Getenv("TOKEN_PORT"),
+			Host:          os.Getenv("TOKEN_HOST"),
+			Port:          os.Getenv("TOKEN_PORT"),
+			TLSEnabled:    os.Getenv("TOKEN_TLS_ENABLED") == "true",
+			TLSCACertFile: os.Getenv("TOKEN_TLS_CLIENT_CA_FILE"),
+			TLSCertFile:   os.Getenv("TOKEN_TLS_CLIENT_CERT_FILE"),
+			TLSKeyFile:    os.Getenv("TOKEN_TLS_CLIENT_KEY_FILE"),
 		},
 		DB: DBConfig{
 			Host:     os.Getenv("SERVER_DB_HOST"),
@@ -54,4 +63,37 @@ func New() (Config, error) {
 			TPS:        tps,
 		},
 	}, nil
+}
+
+// Validate checks that all required configuration values are present.
+func (c Config) Validate() error {
+	required := map[string]string{
+		"TOKEN_HOST":         c.TokenServer.Host,
+		"TOKEN_PORT":         c.TokenServer.Port,
+		"SERVER_DB_HOST":     c.DB.Host,
+		"SERVER_DB_PORT":     c.DB.Port,
+		"SERVER_DB_NAME":     c.DB.Name,
+		"SERVER_DB_USER":     c.DB.User,
+		"SERVER_DB_PASSWORD": c.DB.Password,
+	}
+	for name, val := range required {
+		if val == "" {
+			return errors.New("required env var not set: " + name)
+		}
+	}
+	if c.Service.TPS <= 0 {
+		return errors.New("GENERATOR_TPS must be a positive integer")
+	}
+	if c.TokenServer.TLSEnabled {
+		if c.TokenServer.TLSCACertFile == "" {
+			return errors.New("required env var not set: TOKEN_TLS_CLIENT_CA_FILE")
+		}
+		if c.TokenServer.TLSCertFile == "" {
+			return errors.New("required env var not set: TOKEN_TLS_CLIENT_CERT_FILE")
+		}
+		if c.TokenServer.TLSKeyFile == "" {
+			return errors.New("required env var not set: TOKEN_TLS_CLIENT_KEY_FILE")
+		}
+	}
+	return nil
 }

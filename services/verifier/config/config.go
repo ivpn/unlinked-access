@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"os"
 )
 
@@ -102,4 +103,26 @@ func New() (Config, error) {
 			FortanixKeyId:      os.Getenv("FORTANIX_KEY_ID"),
 		},
 	}, nil
+}
+
+// Validate checks that all required configuration values are present.
+func (c Config) Validate() error {
+	if c.API.ManifestURL == "" {
+		return errors.New("required env var not set: MANIFEST_URL")
+	}
+	if c.API.ManifestPSK == "" {
+		return errors.New("required env var not set: MANIFEST_PSK")
+	}
+	if !c.Service.Mock {
+		if c.Service.FortanixEndpoint == "" {
+			return errors.New("required env var not set: FORTANIX_ENDPOINT")
+		}
+		if c.Service.FortanixApiKey == "" {
+			return errors.New("required env var not set: FORTANIX_API_KEY")
+		}
+		if c.Service.FortanixKeyId == "" {
+			return errors.New("required env var not set: FORTANIX_KEY_ID")
+		}
+	}
+	return nil
 }

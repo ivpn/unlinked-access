@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -16,7 +17,7 @@ type MockHSMClient struct {
 }
 
 // Token implements the HSMClient interface for the mock
-func (m *MockHSMClient) Generate(input string) (*model.HSMToken, error) {
+func (m *MockHSMClient) Generate(ctx context.Context, input string) (*model.HSMToken, error) {
 	// Store the parameters for verification
 	m.input = input
 	return m.mockToken, m.mockError
@@ -46,7 +47,7 @@ func TestGenerateToken_Success(t *testing.T) {
 	inputStr := "test-input"
 
 	// Act
-	token, err := svc.generateToken(inputStr)
+	token, err := svc.generateToken(context.Background(), inputStr)
 
 	// Assert
 	if err != nil {
@@ -79,7 +80,7 @@ func TestGenerateToken_Error(t *testing.T) {
 	inputStr := "test-input"
 
 	// Act
-	token, err := svc.generateToken(inputStr)
+	token, err := svc.generateToken(context.Background(), inputStr)
 
 	// Assert
 	if err != expectedError {
@@ -123,7 +124,7 @@ func TestGenerateToken_DifferentParameters(t *testing.T) {
 			svc := New(mockHSM, cfg)
 
 			// Act
-			_, err := svc.generateToken(tc.input)
+			_, err := svc.generateToken(context.Background(), tc.input)
 
 			// Assert
 			if err != nil {

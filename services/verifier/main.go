@@ -16,6 +16,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	if err := cfg.Validate(); err != nil {
+		log.Fatal("configuration error: ", err)
+	}
+
 	var stores []service.Store
 
 	if cfg.DB.Host != "" {
@@ -62,7 +66,7 @@ func main() {
 		switch args[1] {
 		case "sync":
 			if err := svc.SyncManifest(); err != nil {
-				log.Println(err)
+				log.Fatal(err)
 			}
 			return
 
@@ -76,6 +80,6 @@ func main() {
 	}
 
 	if err := svc.Start(); err != nil {
-		log.Println(err)
+		log.Fatal(err)
 	}
 }

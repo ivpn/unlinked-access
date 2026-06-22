@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"crypto/subtle"
 	"slices"
 	"strings"
 
@@ -10,23 +11,27 @@ import (
 func NewIPFilter(allowedIPs []string) fiber.Handler {
 
 	return func(c *fiber.Ctx) error {
-		clientIP := c.IP()
-		if slices.Contains(allowedIPs, clientIP) || c.IP() == "" {
+		if slices.Contains(allowedIPs, "*") {
 			return c.Next()
 		}
 
-		return c.SendStatus(fiber.StatusForbidden)
+		clientIP := c.IP()
+		if clientIP != "" && slices.Contains(allowedIPs, clientIP) {
+			return c.Next()
+		}
+
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Forbidden"})
 	}
 }
 
 func NewPSK(psk string) fiber.Handler {
 
 	return func(c *fiber.Ctx) error {
-		if GetToken(c) == psk {
+		if subtle.ConstantTimeCompare([]byte(GetToken(c)), []byte(psk)) == 1 {
 			return c.Next()
 		}
 
-		return c.SendStatus(fiber.StatusUnauthorized)
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "Unauthorized"})
 	}
 }
 
