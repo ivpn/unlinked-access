@@ -39,6 +39,7 @@ type Store interface {
 
 type TokenClient interface {
 	GenerateToken(string) (string, error)
+	GenerateSignature(string) (string, error)
 }
 
 type Service struct {
@@ -278,7 +279,7 @@ func (s *Service) SignManifest(m *model.Manifest) error {
 	digestBase64 := base64.StdEncoding.EncodeToString(digest[:])
 
 	// Generate signature for manifest hash
-	signature, err := s.Token.GenerateToken(digestBase64)
+	signature, err := s.Token.GenerateSignature(digestBase64)
 	if err != nil {
 		log.Println("error generating token for manifest hash:", err)
 		return err
