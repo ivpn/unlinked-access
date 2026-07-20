@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	proto "ivpn.net/auth/services/proto"
 	"ivpn.net/auth/services/token/config"
 	"ivpn.net/auth/services/token/model"
 )
@@ -17,7 +18,13 @@ type MockHSMClient struct {
 }
 
 // Token implements the HSMClient interface for the mock
-func (m *MockHSMClient) Generate(ctx context.Context, input string) (*model.HSMToken, error) {
+func (m *MockHSMClient) GenerateToken(ctx context.Context, input string) (*model.HSMToken, error) {
+	// Store the parameters for verification
+	m.input = input
+	return m.mockToken, m.mockError
+}
+
+func (m *MockHSMClient) GenerateSignature(ctx context.Context, input string) (*model.HSMToken, error) {
 	// Store the parameters for verification
 	m.input = input
 	return m.mockToken, m.mockError
@@ -47,15 +54,15 @@ func TestGenerateToken_Success(t *testing.T) {
 	inputStr := "test-input"
 
 	// Act
-	token, err := svc.generateToken(context.Background(), inputStr)
+	token, err := svc.GenerateToken(context.Background(), &proto.Request{Input: inputStr})
 
 	// Assert
 	if err != nil {
 		t.Errorf("Expected no error, got %v", err)
 	}
 
-	if token != expectedToken {
-		t.Errorf("Expected token to be %v, got %v", expectedToken, token)
+	if token.GetToken() != expectedToken.Token {
+		t.Errorf("Expected token to be %v, got %v", expectedToken.Token, token.GetToken())
 	}
 
 	if mockHSM.input != inputStr {
@@ -80,7 +87,7 @@ func TestGenerateToken_Error(t *testing.T) {
 	inputStr := "test-input"
 
 	// Act
-	token, err := svc.generateToken(context.Background(), inputStr)
+	token, err := svc.GenerateToken(context.Background(), &proto.Request{Input: inputStr})
 
 	// Assert
 	if err != expectedError {
@@ -124,7 +131,7 @@ func TestGenerateToken_DifferentParameters(t *testing.T) {
 			svc := New(mockHSM, cfg)
 
 			// Act
-			_, err := svc.generateToken(context.Background(), tc.input)
+			_, err := svc.GenerateToken(context.Background(), &proto.Request{Input: tc.input})
 
 			// Assert
 			if err != nil {
