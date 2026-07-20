@@ -9,7 +9,8 @@ type Config struct {
 	Host               string
 	Port               string
 	Mock               bool
-	AWSKeyId           string
+	AWSTokenKeyId      string
+	AWSSignKeyId       string
 	AWSAccessKeyId     string
 	AWSSecretAccessKey string
 	AWSRegion          string
@@ -29,7 +30,8 @@ func New() (Config, error) {
 		Host:               os.Getenv("TOKEN_HOST"),
 		Port:               os.Getenv("TOKEN_PORT"),
 		Mock:               os.Getenv("TOKEN_MOCK") == "true",
-		AWSKeyId:           os.Getenv("AWS_TOKEN_KEY_ID"),
+		AWSTokenKeyId:      os.Getenv("AWS_TOKEN_KEY_ID"),
+		AWSSignKeyId:       os.Getenv("AWS_SIGN_KEY_ID"),
 		AWSAccessKeyId:     os.Getenv("AWS_ACCESS_KEY_ID"),
 		AWSSecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
 		AWSRegion:          os.Getenv("AWS_REGION"),
