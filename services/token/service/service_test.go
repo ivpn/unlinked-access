@@ -51,7 +51,7 @@ func TestGenerateToken_Success(t *testing.T) {
 	}
 
 	svc := New(mockHSM, cfg)
-	inputStr := "test-input"
+	inputStr := "i-TEST-1234-ABCD"
 
 	// Act
 	token, err := svc.GenerateToken(context.Background(), &proto.Request{Input: inputStr})
@@ -84,7 +84,7 @@ func TestGenerateToken_Error(t *testing.T) {
 	}
 
 	svc := New(mockHSM, cfg)
-	inputStr := "test-input"
+	inputStr := "i-TEST-1234-ABCD"
 
 	// Act
 	token, err := svc.GenerateToken(context.Background(), &proto.Request{Input: inputStr})
@@ -103,15 +103,45 @@ func TestGenerateToken_Error(t *testing.T) {
 	}
 }
 
-func TestGenerateToken_DifferentParameters(t *testing.T) {
+func TestGenerateToken_InvalidFormat(t *testing.T) {
 	testCases := []struct {
 		name  string
 		input string
 	}{
 		{"Empty input", ""},
-		{"Zero TTL", "test-input"},
-		{"Negative TTL", "test-input"},
-		{"Long input", "this-is-a-very-long-input-string-for-testing"},
+		{"No prefix", "ABCD-1234-EFGH"},
+		{"Lowercase", "i-abcd-1234-efgh"},
+		{"Too short", "i-ABC-1234-EFGH"},
+		{"Too long", "i-ABCDE-1234-EFGH"},
+	}
+
+	cfg, err := config.New()
+	if err != nil {
+		t.Fatalf("Failed to load configuration: %v", err)
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockHSM := &MockHSMClient{}
+			svc := New(mockHSM, cfg)
+
+			_, err := svc.GenerateToken(context.Background(), &proto.Request{Input: tc.input})
+			if err == nil {
+				t.Errorf("Expected error for input %q, got nil", tc.input)
+			}
+		})
+	}
+}
+
+func TestGenerateToken_DifferentParameters(t *testing.T) {
+	testCases := []struct {
+		name  string
+		input string
+	}{
+		{"Alphanumeric", "i-ABCD-1234-EFGH"},
+		{"All digits", "i-1234-5678-9012"},
+		{"All letters", "i-ABCD-EFGH-IJKL"},
+		{"Mixed", "i-A1B2-C3D4-E5F6"},
 	}
 
 	cfg, err := config.New()
