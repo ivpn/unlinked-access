@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/fortanix/sdkms-client-go/sdkms"
@@ -22,6 +23,8 @@ import (
 )
 
 const maxInputBytes = 4096
+
+var accountIDRegexp = regexp.MustCompile(`^i-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$`)
 
 // ErrAuthRequired is returned when the HSM session needs re-authentication.
 var ErrAuthRequired = errors.New("hsm auth required")
@@ -105,6 +108,9 @@ func buildServerTLS(cfg *config.Config) (*tls.Config, error) {
 func (s *Server) GenerateToken(ctx context.Context, req *proto.Request) (*proto.Response, error) {
 	if len(req.Input) > maxInputBytes {
 		return nil, fmt.Errorf("input exceeds maximum allowed size of %d bytes", maxInputBytes)
+	}
+	if !accountIDRegexp.MatchString(req.Input) {
+		return nil, fmt.Errorf("invalid format: expected i-XXXX-XXXX-XXXX")
 	}
 
 	reqCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
