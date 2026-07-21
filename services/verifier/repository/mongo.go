@@ -197,3 +197,11 @@ func (m *MongoDB) GetLatestManifestLog() (model.ManifestLog, error) {
 
 	return logEntry, nil
 }
+
+func (m *MongoDB) AddManifestLog(logEntry model.ManifestLog) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err := m.Client.Database(m.DBName).Collection("manifest_logs").InsertOne(ctx, logEntry)
+	return err
+}

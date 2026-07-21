@@ -75,6 +75,7 @@ func connect(cfg config.DBConfig) (*gorm.DB, error) {
 func migrate(db *gorm.DB, tableName string) error {
 	err := db.Table(tableName).AutoMigrate(
 		&model.Subscription{},
+		&model.ManifestLog{},
 	)
 	if err != nil {
 		return err

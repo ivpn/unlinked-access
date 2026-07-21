@@ -10,12 +10,14 @@ import (
 	"ivpn.net/auth/services/verifier/client/http"
 	"ivpn.net/auth/services/verifier/config"
 	"ivpn.net/auth/services/verifier/model"
+	"ivpn.net/auth/services/verifier/vendor/github.com/google/uuid"
 )
 
 type Store interface {
 	GetSubscriptions() ([]model.Subscription, error)
 	UpdateSubscriptions([]model.Subscription) error
 	GetLatestManifestLog() (model.ManifestLog, error)
+	AddManifestLog(model.ManifestLog) error
 }
 
 type Verifier interface {
@@ -62,12 +64,23 @@ func (s *Service) SyncManifest() error {
 		return err
 	}
 
+	manifestLog := s.CreateManifestLog(m)
+
 	err = s.VerifyManifest(m)
 	if err != nil {
 		return err
 	}
 
+	manifestLog.SignatureValid = true
+
 	err = s.UpdateSubscriptions(m)
+	if err != nil {
+		return err
+	}
+
+	manifestLog.Status = "success"
+
+	err = s.SaveManifestLog(m, manifestLog)
 	if err != nil {
 		return err
 	}
@@ -175,6 +188,26 @@ func (s *Service) UpdateSubscriptions(m model.Manifest) error {
 	}
 
 	return lastErr
+}
+
+func (s *Service) CreateManifestLog(m model.Manifest) model.ManifestLog {
+	return model.ManifestLog{
+		ID:             uuid.New().String(),
+		Version:        m.Version,
+		CreatedAt:      time.Now(),
+		SignatureValid: false,
+		Status:         "failed",
+	}
+}
+
+func (s *Service) SaveManifestLog(m model.Manifest, manifestLog model.ManifestLog) error {
+	for _, store := range s.Stores {
+		if err := store.AddManifestLog(manifestLog); err != nil {
+			log.Printf("error adding manifest log entry to store: %v", err)
+			return err
+		}
+	}
+	return nil
 }
 
 func UpdateSubscriptionFromManifest(sub model.Subscription, manifestSubs []model.Subscription) (model.Subscription, error) {

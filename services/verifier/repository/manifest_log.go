@@ -10,3 +10,11 @@ func (d *Database) GetLatestManifestLog() (model.ManifestLog, error) {
 	}
 	return log, nil
 }
+
+func (d *Database) AddManifestLog(log model.ManifestLog) error {
+	err := d.Client.Table(d.TableName).Create(&log).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}

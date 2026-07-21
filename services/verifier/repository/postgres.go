@@ -110,3 +110,11 @@ func (d *PostgresDB) GetLatestManifestLog() (model.ManifestLog, error) {
 	}
 	return logEntry, nil
 }
+
+func (d *PostgresDB) AddManifestLog(log model.ManifestLog) error {
+	err := d.Client.Table("manifest_logs").Create(&log).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
