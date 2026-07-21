@@ -117,8 +117,11 @@ func (s *Service) CreateManifest() (*model.Manifest, error) {
 		return nil, err
 	}
 
+	version := time.Now().UTC().Year()*100000000 + int(time.Now().UTC().Month())*1000000 + time.Now().UTC().Day()*10000 + time.Now().UTC().Hour()*100 + time.Now().UTC().Minute()
+
 	manifest := &model.Manifest{
 		ID:            uuid.New().String(),
+		Version:       version,
 		CreatedAt:     time.Now(),
 		ValidUntil:    time.Now().Add(3 * time.Hour),
 		Subscriptions: subs,
