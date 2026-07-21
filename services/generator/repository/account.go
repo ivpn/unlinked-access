@@ -41,7 +41,6 @@ func (d *Database) GetAccountsMock(count int) ([]*model.Account, error) {
 		accounts[i] = &model.Account{
 			ID:          id,
 			CreatedAt:   time.Now(),
-			IsActive:    true,
 			ActiveUntil: time.Now().AddDate(0, i%12+1, 0), // Active for x months
 			Product:     fmt.Sprintf("Tier %d", i%3+1),    // Mocking different tiers
 		}

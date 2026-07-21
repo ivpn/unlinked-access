@@ -19,13 +19,12 @@ func (d *Database) UpdateSubscriptions(subs []model.Subscription) error {
 	}
 
 	var ids []string
-	var isActiveCases, activeUntilCases, tierCases strings.Builder
+	var activeUntilCases, tierCases strings.Builder
 
 	for _, sub := range subs {
 		id := sub.ID                               // assuming this is a string (e.g., UUID)
 		ids = append(ids, fmt.Sprintf("'%s'", id)) // quote the string for SQL
 
-		isActiveCases.WriteString(fmt.Sprintf("WHEN '%s' THEN %t ", id, sub.IsActive))
 		activeUntilCases.WriteString(fmt.Sprintf("WHEN '%s' THEN '%s' ", id, sub.ActiveUntil.Format("2006-01-02 15:04:05")))
 		tierCases.WriteString(fmt.Sprintf("WHEN '%s' THEN '%s' ", id, sub.Tier))
 	}
@@ -34,11 +33,10 @@ func (d *Database) UpdateSubscriptions(subs []model.Subscription) error {
 		UPDATE %s
 		SET 
 			updated_at = NOW(),
-			is_active = CASE id %s END,
 			active_until = CASE id %s END,
 			tier = CASE id %s END
 		WHERE id IN (%s);
-	`, d.TableName, isActiveCases.String(), activeUntilCases.String(), tierCases.String(), strings.Join(ids, ","))
+	`, d.TableName, activeUntilCases.String(), tierCases.String(), strings.Join(ids, ","))
 
 	return d.Client.Exec(sql).Error
 }

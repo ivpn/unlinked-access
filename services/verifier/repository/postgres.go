@@ -90,7 +90,6 @@ func (d *PostgresDB) UpdateSubscriptions(subs []model.Subscription) error {
 			result := tx.Table(d.TableName).
 				Where("id = ?", sub.ID).
 				Updates(map[string]any{
-					"is_active":    sub.IsActive,
 					"active_until": sub.ActiveUntil,
 					"tier":         sub.Tier,
 				})

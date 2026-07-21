@@ -193,7 +193,6 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 
 				results <- model.Subscription{
 					TokenHash:   base64.StdEncoding.EncodeToString(tokenHash[:]),
-					IsActive:    account.IsActive,
 					ActiveUntil: roundedUntil,
 					Tier:        tier,
 				}

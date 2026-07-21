@@ -62,7 +62,7 @@ func (s *Service) GetPreAuth(ctx context.Context, ID string) (model.PreAuth, err
 	return retrieved, nil
 }
 
-func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive bool, activeUntil time.Time, tier string) ([]model.SessionService, error) {
+func (s *Service) AddPreAuth(ctx context.Context, accountId string, activeUntil time.Time, tier string) ([]model.SessionService, error) {
 	// Generate token
 	token, err := s.Token.GenerateToken(accountId)
 	if err != nil {
@@ -75,7 +75,6 @@ func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive boo
 	pa := model.PreAuth{
 		ID:          uuid.New().String(),
 		TokenHash:   base64.StdEncoding.EncodeToString(tokenHash[:]),
-		IsActive:    isActive,
 		ActiveUntil: activeUntil,
 		Tier:        tier,
 	}
