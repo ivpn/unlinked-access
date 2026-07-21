@@ -15,6 +15,7 @@ import (
 type Store interface {
 	GetSubscriptions() ([]model.Subscription, error)
 	UpdateSubscriptions([]model.Subscription) error
+	GetLatestManifestLog() (model.ManifestLog, error)
 }
 
 type Verifier interface {
@@ -124,9 +125,31 @@ func (s *Service) VerifyManifest(m model.Manifest) error {
 	return nil
 }
 
+func (s *Service) VerifyManifestVersion(m model.Manifest, store Store) error {
+	log.Printf("verifying manifest version: %v", m.Version)
+
+	latestLog, err := store.GetLatestManifestLog()
+	if err != nil {
+		log.Printf("error fetching latest manifest log: %v", err)
+		return err
+	}
+
+	if m.Version <= latestLog.Version {
+		return fmt.Errorf("manifest version is not newer than the latest log")
+	}
+
+	return nil
+}
+
 func (s *Service) UpdateSubscriptions(m model.Manifest) error {
 	var lastErr error
 	for _, store := range s.Stores {
+		if err := s.VerifyManifestVersion(m, store); err != nil {
+			log.Printf("error verifying manifest version: %v", err)
+			lastErr = err
+			continue
+		}
+
 		subs, err := store.GetSubscriptions()
 		if err != nil {
 			log.Printf("error fetching subscriptions from store: %v", err)

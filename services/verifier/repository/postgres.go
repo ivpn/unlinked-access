@@ -101,3 +101,12 @@ func (d *PostgresDB) UpdateSubscriptions(subs []model.Subscription) error {
 		return nil
 	})
 }
+
+func (d *PostgresDB) GetLatestManifestLog() (model.ManifestLog, error) {
+	var logEntry model.ManifestLog
+	err := d.Client.Table("manifest_logs").Order("version DESC").First(&logEntry).Error
+	if err != nil {
+		return model.ManifestLog{}, err
+	}
+	return logEntry, nil
+}

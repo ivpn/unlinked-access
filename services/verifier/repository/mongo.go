@@ -180,3 +180,20 @@ func (m *MongoDB) UpdateSubscriptions(subs []model.Subscription) error {
 	_, err := m.collection().BulkWrite(ctx, models, opts)
 	return err
 }
+
+func (m *MongoDB) GetLatestManifestLog() (model.ManifestLog, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	opts := options.FindOne().SetSort(bson.D{{Key: "created_at", Value: -1}})
+	var logEntry model.ManifestLog
+	err := m.Client.Database(m.DBName).Collection("manifest_logs").FindOne(ctx, bson.D{}, opts).Decode(&logEntry)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return model.ManifestLog{}, fmt.Errorf("no manifest logs found")
+		}
+		return model.ManifestLog{}, err
+	}
+
+	return logEntry, nil
+}
