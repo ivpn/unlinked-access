@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
@@ -37,14 +38,37 @@ func NewSignerFortanix(cfg config.Config) (*SignerFortanix, error) {
 }
 
 func (s *SignerFortanix) GenerateToken(ctx context.Context, input string) (*model.HSMToken, error) {
-	return s.generate(ctx, input, s.Cfg.FortanixTokenKeyId)
+	if input == "" {
+		return nil, fmt.Errorf("%s", ErrEmptyInput)
+	}
+
+	digest := sha256.Sum256([]byte(s.Cfg.TokenPreKey + input))
+	data := sdkms.Blob(digest[:])
+
+	if s.Cfg.Mock {
+		return &model.HSMToken{
+			Token: base64.StdEncoding.EncodeToString(digest[:]),
+		}, nil
+	}
+
+	alg := sdkms.DigestAlgorithmSha256
+	req := sdkms.MacRequest{
+		Data: data,
+		Alg:  &alg,
+		Key:  sdkms.SobjectByID(s.Cfg.FortanixTokenKeyId),
+	}
+
+	res, err := s.Client.Mac(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.HSMToken{
+		Token: base64.StdEncoding.EncodeToString(res.Mac),
+	}, nil
 }
 
 func (s *SignerFortanix) GenerateSignature(ctx context.Context, input string) (*model.HSMToken, error) {
-	return s.generate(ctx, input, s.Cfg.FortanixSignKeyId)
-}
-
-func (s *SignerFortanix) generate(ctx context.Context, input string, keyId string) (*model.HSMToken, error) {
 	if input == "" {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
@@ -62,7 +86,7 @@ func (s *SignerFortanix) generate(ctx context.Context, input string, keyId strin
 	req := sdkms.MacRequest{
 		Data: data,
 		Alg:  &alg,
-		Key:  sdkms.SobjectByID(keyId),
+		Key:  sdkms.SobjectByID(s.Cfg.FortanixSignKeyId),
 	}
 
 	res, err := s.Client.Mac(ctx, req)

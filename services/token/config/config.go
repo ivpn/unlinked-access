@@ -23,6 +23,7 @@ type Config struct {
 	TLSKeyFile         string
 	TLSCAFile          string
 	Debug              bool
+	TokenPreKey        string
 }
 
 func New() (Config, error) {
@@ -44,6 +45,7 @@ func New() (Config, error) {
 		TLSKeyFile:         os.Getenv("TOKEN_TLS_KEY_FILE"),
 		TLSCAFile:          os.Getenv("TOKEN_TLS_CA_FILE"),
 		Debug:              os.Getenv("TOKEN_DEBUG") == "true",
+		TokenPreKey:        os.Getenv("TOKEN_PRE_KEY"),
 	}, nil
 }
 
