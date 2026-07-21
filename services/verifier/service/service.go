@@ -6,11 +6,11 @@ import (
 	"log"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jasonlvhit/gocron"
 	"ivpn.net/auth/services/verifier/client/http"
 	"ivpn.net/auth/services/verifier/config"
 	"ivpn.net/auth/services/verifier/model"
-	"ivpn.net/auth/services/verifier/vendor/github.com/google/uuid"
 )
 
 type Store interface {
