@@ -205,3 +205,12 @@ func (m *MongoDB) AddManifestLog(logEntry model.ManifestLog) error {
 	_, err := m.Client.Database(m.DBName).Collection("manifest_logs").InsertOne(ctx, logEntry)
 	return err
 }
+
+func (m *MongoDB) CleanupManifestLogs() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	expirationTime := time.Now().AddDate(0, 0, -7)
+	_, err := m.Client.Database(m.DBName).Collection("manifest_logs").DeleteMany(ctx, bson.D{{Key: "created_at", Value: bson.D{{Key: "$lt", Value: expirationTime}}}})
+	return err
+}

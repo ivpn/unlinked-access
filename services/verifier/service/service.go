@@ -18,6 +18,7 @@ type Store interface {
 	UpdateSubscriptions([]model.Subscription) error
 	GetLatestManifestLog() (model.ManifestLog, error)
 	AddManifestLog(model.ManifestLog) error
+	CleanupManifestLogs() error
 }
 
 type Verifier interface {
@@ -50,6 +51,11 @@ func (s *Service) Start() error {
 	err := gocron.Every(1).Hour().Do(s.SyncManifest)
 	if err != nil {
 		log.Printf("error syncing manifest: %v", err)
+	}
+
+	err = gocron.Every(1).Day().Do(s.CleanupManifestLogs)
+	if err != nil {
+		log.Printf("error cleaning up manifest logs: %v", err)
 	}
 
 	// Start all the pending jobs
@@ -204,6 +210,16 @@ func (s *Service) SaveManifestLog(m model.Manifest, manifestLog model.ManifestLo
 	for _, store := range s.Stores {
 		if err := store.AddManifestLog(manifestLog); err != nil {
 			log.Printf("error adding manifest log entry to store: %v", err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Service) CleanupManifestLogs() error {
+	for _, store := range s.Stores {
+		if err := store.CleanupManifestLogs(); err != nil {
+			log.Printf("error removing expired manifest logs from store: %v", err)
 			return err
 		}
 	}
