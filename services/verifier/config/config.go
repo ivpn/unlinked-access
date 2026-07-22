@@ -42,6 +42,7 @@ type NoSQLDBConfig struct {
 type ServiceConfig struct {
 	SampleData         bool
 	Mock               bool
+	DevMode            bool
 	AWSKeyId           string
 	AWSAccessKeyId     string
 	AWSSecretAccessKey string
@@ -94,6 +95,7 @@ func New() (Config, error) {
 		Service: ServiceConfig{
 			SampleData:         os.Getenv("SAMPLE_DATA") == "true",
 			Mock:               os.Getenv("TOKEN_MOCK") == "true",
+			DevMode:            os.Getenv("DEV_MODE") == "true",
 			AWSKeyId:           os.Getenv("AWS_TOKEN_KEY_ID"),
 			AWSAccessKeyId:     os.Getenv("AWS_ACCESS_KEY_ID"),
 			AWSSecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
@@ -112,6 +114,12 @@ func (c Config) Validate() error {
 	}
 	if c.API.ManifestPSK == "" {
 		return errors.New("required env var not set: MANIFEST_PSK")
+	}
+	if c.Service.Mock && !c.Service.DevMode {
+		return errors.New("TOKEN_MOCK=true requires DEV_MODE=true")
+	}
+	if c.PGDB.Host != "" && c.PGDB.SSLMode == "disable" && !c.Service.DevMode {
+		return errors.New("CLIENT_PGSQL_SSLMODE=disable requires DEV_MODE=true")
 	}
 	if !c.Service.Mock {
 		if c.Service.FortanixEndpoint == "" {

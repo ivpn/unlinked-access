@@ -49,7 +49,7 @@ func (s *VerifierFortanix) Verify(signature string, data []byte) error {
 			return fmt.Errorf("invalid manifest signature (mock)")
 		}
 
-		log.Println("manifest signature (mock) OK")
+		log.Println("SECURITY ALERT: manifest signature verified using mock algorithm — not suitable for production")
 
 		return nil
 	}
