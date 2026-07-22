@@ -3,10 +3,10 @@ package http
 import (
 	"bytes"
 	"compress/gzip"
-	"encoding/json"
 	"fmt"
 	"io"
 
+	jsonv2 "github.com/go-json-experiment/json"
 	"github.com/gofiber/fiber/v2"
 	"ivpn.net/auth/services/verifier/config"
 	"ivpn.net/auth/services/verifier/model"
@@ -55,7 +55,7 @@ func (h Http) GetManifest() (model.Manifest, error) {
 	if err != nil {
 		// If not gzip, use original body
 		var manifest model.Manifest
-		err := json.Unmarshal(body, &manifest)
+		err := jsonv2.Unmarshal(body, &manifest, jsonv2.RejectUnknownMembers(true))
 		if err != nil {
 			return model.Manifest{}, err
 		}
@@ -74,7 +74,7 @@ func (h Http) GetManifest() (model.Manifest, error) {
 	}
 
 	var manifest model.Manifest
-	err = json.Unmarshal(decompressed, &manifest)
+	err = jsonv2.Unmarshal(decompressed, &manifest, jsonv2.RejectUnknownMembers(true))
 	if err != nil {
 		return model.Manifest{}, err
 	}

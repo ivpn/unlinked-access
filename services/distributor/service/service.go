@@ -1,12 +1,12 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"os"
 
+	jsonv2 "github.com/go-json-experiment/json"
 	"ivpn.net/auth/services/distributor/config"
 	"ivpn.net/auth/services/distributor/model"
 )
@@ -44,7 +44,7 @@ func (s *Service) GetManifest() (model.Manifest, error) {
 
 	// Unmarshal JSON into Manifest struct
 	var manifest model.Manifest
-	if err = json.Unmarshal(bytes, &manifest); err != nil {
+	if err = jsonv2.Unmarshal(bytes, &manifest, jsonv2.RejectUnknownMembers(true)); err != nil {
 		return model.Manifest{}, fmt.Errorf("failed to unmarshal manifest: %w", err)
 	}
 
