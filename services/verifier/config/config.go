@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"os"
+	"strings"
 )
 
 type APIConfig struct {
@@ -109,6 +110,9 @@ func New() (Config, error) {
 func (c Config) Validate() error {
 	if c.API.ManifestURL == "" {
 		return errors.New("required env var not set: MANIFEST_URL")
+	}
+	if !strings.HasPrefix(c.API.ManifestURL, "https://") {
+		return errors.New("MANIFEST_URL must use HTTPS")
 	}
 	if c.API.ManifestPSK == "" {
 		return errors.New("required env var not set: MANIFEST_PSK")
