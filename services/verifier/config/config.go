@@ -48,7 +48,7 @@ type ServiceConfig struct {
 	AWSRegion          string
 	FortanixEndpoint   string
 	FortanixApiKey     string
-	FortanixKeyId      string
+	FortanixSignKeyId  string
 }
 
 type Config struct {
@@ -100,7 +100,7 @@ func New() (Config, error) {
 			AWSRegion:          os.Getenv("AWS_REGION"),
 			FortanixEndpoint:   os.Getenv("FORTANIX_ENDPOINT"),
 			FortanixApiKey:     os.Getenv("FORTANIX_API_KEY"),
-			FortanixKeyId:      os.Getenv("FORTANIX_KEY_ID"),
+			FortanixSignKeyId:  os.Getenv("FORTANIX_SIGN_KEY_ID"),
 		},
 	}, nil
 }
@@ -120,8 +120,8 @@ func (c Config) Validate() error {
 		if c.Service.FortanixApiKey == "" {
 			return errors.New("required env var not set: FORTANIX_API_KEY")
 		}
-		if c.Service.FortanixKeyId == "" {
-			return errors.New("required env var not set: FORTANIX_KEY_ID")
+		if c.Service.FortanixSignKeyId == "" {
+			return errors.New("required env var not set: FORTANIX_SIGN_KEY_ID")
 		}
 	}
 	return nil
