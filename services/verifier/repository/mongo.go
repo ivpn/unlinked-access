@@ -22,7 +22,6 @@ import (
 type mongoSubscription struct {
 	ID          bson.Binary `bson:"_id,omitempty"`
 	TokenHash   string      `bson:"token_hash"`
-	IsActive    bool        `bson:"is_active"`
 	ActiveUntil time.Time   `bson:"active_until"`
 	Tier        string      `bson:"tier"`
 }
@@ -36,7 +35,6 @@ func toModelSubscription(ms mongoSubscription) model.Subscription {
 	return model.Subscription{
 		ID:          id.String(),
 		TokenHash:   ms.TokenHash,
-		IsActive:    ms.IsActive,
 		ActiveUntil: ms.ActiveUntil,
 		Tier:        ms.Tier,
 	}
@@ -168,7 +166,6 @@ func (m *MongoDB) UpdateSubscriptions(subs []model.Subscription) error {
 		}
 		filter := bson.D{{Key: "_id", Value: idBin}}
 		update := bson.D{{Key: "$set", Value: bson.D{
-			{Key: "is_active", Value: sub.IsActive},
 			{Key: "active_until", Value: sub.ActiveUntil},
 			{Key: "tier", Value: sub.Tier},
 			{Key: "updated_at", Value: time.Now()},

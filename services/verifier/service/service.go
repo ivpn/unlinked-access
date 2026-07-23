@@ -157,7 +157,6 @@ func (s *Service) UpdateSubscriptions(m model.Manifest) error {
 func UpdateSubscriptionFromManifest(sub model.Subscription, manifestSubs []model.Subscription) (model.Subscription, error) {
 	for _, s := range manifestSubs {
 		if sub.TokenHash == s.TokenHash {
-			sub.IsActive = s.IsActive
 			sub.ActiveUntil = s.ActiveUntil
 			sub.Tier = s.Tier
 			return sub, nil
