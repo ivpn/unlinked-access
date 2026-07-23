@@ -23,10 +23,15 @@ func NewDB(cfg config.Config) (*Database, error) {
 	}
 
 	if cfg.Service.SampleData {
-		err = migrate(db, cfg.DB.Table)
+		err = migrateSample(db, cfg.DB.Table)
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	err = migrate(db, cfg.DB.Table)
+	if err != nil {
+		return nil, err
 	}
 
 	return &Database{
@@ -74,8 +79,20 @@ func connect(cfg config.DBConfig) (*gorm.DB, error) {
 
 func migrate(db *gorm.DB, tableName string) error {
 	err := db.Table(tableName).AutoMigrate(
-		&model.Subscription{},
 		&model.ManifestLog{},
+	)
+	if err != nil {
+		return err
+	}
+
+	log.Println("DB migration OK")
+
+	return nil
+}
+
+func migrateSample(db *gorm.DB, tableName string) error {
+	err := db.Table(tableName).AutoMigrate(
+		&model.Subscription{},
 	)
 	if err != nil {
 		return err
