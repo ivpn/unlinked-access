@@ -180,8 +180,6 @@ func (s *Service) UpdateSubscriptions(m model.Manifest) error {
 		}
 
 		subs, err := store.GetSubscriptions()
-		log.Printf("subs: %v", subs)
-		log.Printf("manifest subs: %v", m.Subscriptions)
 		if err != nil {
 			log.Printf("error fetching subscriptions from store: %v", err)
 			lastErr = err
