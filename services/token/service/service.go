@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/fortanix/sdkms-client-go/sdkms"
@@ -23,11 +24,14 @@ import (
 
 const maxInputBytes = 4096
 
+var accountIDRegexp = regexp.MustCompile(`^i-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$`)
+
 // ErrAuthRequired is returned when the HSM session needs re-authentication.
 var ErrAuthRequired = errors.New("hsm auth required")
 
 type Signer interface {
-	Generate(ctx context.Context, input string) (*model.HSMToken, error)
+	GenerateToken(ctx context.Context, input string) (*model.HSMToken, error)
+	GenerateSignature(ctx context.Context, input string) (*model.HSMToken, error)
 	Authenticate() error
 }
 
@@ -101,7 +105,38 @@ func buildServerTLS(cfg *config.Config) (*tls.Config, error) {
 	}, nil
 }
 
-func (s *Server) Generate(ctx context.Context, req *proto.Request) (*proto.Response, error) {
+func (s *Server) GenerateToken(ctx context.Context, req *proto.Request) (*proto.Response, error) {
+	if len(req.Input) > maxInputBytes {
+		return nil, fmt.Errorf("input exceeds maximum allowed size of %d bytes", maxInputBytes)
+	}
+	if !accountIDRegexp.MatchString(req.Input) {
+		return nil, fmt.Errorf("invalid format: expected i-XXXX-XXXX-XXXX")
+	}
+
+	reqCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	token, err := s.Signer.GenerateToken(reqCtx, req.Input)
+	if err != nil {
+		if isAuthError(err) {
+			log.Println("Re-authenticating Signer session...")
+			if authErr := s.Signer.Authenticate(); authErr == nil {
+				token, err = s.Signer.GenerateToken(reqCtx, req.Input)
+				if err != nil {
+					log.Println(err)
+					return nil, err
+				}
+				return &proto.Response{Token: token.Token}, nil
+			}
+		}
+		log.Println(err)
+		return nil, err
+	}
+
+	return &proto.Response{Token: token.Token}, nil
+}
+
+func (s *Server) GenerateSignature(ctx context.Context, req *proto.Request) (*proto.Response, error) {
 	if len(req.Input) > maxInputBytes {
 		return nil, fmt.Errorf("input exceeds maximum allowed size of %d bytes", maxInputBytes)
 	}
@@ -109,12 +144,12 @@ func (s *Server) Generate(ctx context.Context, req *proto.Request) (*proto.Respo
 	reqCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	token, err := s.generateToken(reqCtx, req.Input)
+	token, err := s.Signer.GenerateSignature(reqCtx, req.Input)
 	if err != nil {
 		if isAuthError(err) {
 			log.Println("Re-authenticating Signer session...")
 			if authErr := s.Signer.Authenticate(); authErr == nil {
-				token, err = s.generateToken(reqCtx, req.Input)
+				token, err = s.Signer.GenerateSignature(reqCtx, req.Input)
 				if err != nil {
 					log.Println(err)
 					return nil, err
@@ -136,8 +171,4 @@ func isAuthError(err error) bool {
 		return be.StatusCode == http.StatusUnauthorized || be.StatusCode == http.StatusForbidden
 	}
 	return false
-}
-
-func (s *Server) generateToken(ctx context.Context, input string) (*model.HSMToken, error) {
-	return s.Signer.Generate(ctx, input)
 }

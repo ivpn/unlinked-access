@@ -44,7 +44,15 @@ func NewSignerAWS(cfg config.Config) (*SignerAWS, error) {
 	}, nil
 }
 
-func (s *SignerAWS) Generate(ctx context.Context, input string) (*model.HSMToken, error) {
+func (s *SignerAWS) GenerateToken(ctx context.Context, input string) (*model.HSMToken, error) {
+	return s.generate(ctx, input, s.Cfg.AWSTokenKeyId)
+}
+
+func (s *SignerAWS) GenerateSignature(ctx context.Context, input string) (*model.HSMToken, error) {
+	return s.generate(ctx, input, s.Cfg.AWSSignKeyId)
+}
+
+func (s *SignerAWS) generate(ctx context.Context, input string, keyId string) (*model.HSMToken, error) {
 	if input == "" {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
@@ -58,7 +66,7 @@ func (s *SignerAWS) Generate(ctx context.Context, input string) (*model.HSMToken
 	}
 
 	generateInput := &kms.GenerateMacInput{
-		KeyId:        &s.Cfg.AWSKeyId,
+		KeyId:        &keyId,
 		Message:      digest[:],
 		MacAlgorithm: types.MacAlgorithmSpecHmacSha256,
 	}

@@ -25,6 +25,7 @@ type Cache interface {
 
 type TokenClient interface {
 	GenerateToken(string) (string, error)
+	GenerateSignature(string) (string, error)
 }
 
 type Service struct {

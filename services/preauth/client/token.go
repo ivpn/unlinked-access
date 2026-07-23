@@ -39,9 +39,22 @@ func (c *TokenClient) GenerateToken(input string) (string, error) {
 		Input: input,
 	}
 
-	resp, err := c.Client.Generate(context.Background(), req)
+	resp, err := c.Client.GenerateToken(context.Background(), req)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	return resp.Token, nil
+}
+
+func (c *TokenClient) GenerateSignature(input string) (string, error) {
+	req := &proto.Request{
+		Input: input,
+	}
+
+	resp, err := c.Client.GenerateSignature(context.Background(), req)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate signature: %w", err)
 	}
 
 	return resp.Token, nil

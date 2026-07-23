@@ -127,9 +127,10 @@ const file_service_proto_rawDesc = "" +
 	"\vttl_minutes\x18\x02 \x01(\x05R\n" +
 	"ttlMinutes\" \n" +
 	"\bResponse\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token24\n" +
-	"\x05Token\x12+\n" +
-	"\bGenerate\x12\x0e.proto.Request\x1a\x0f.proto.ResponseB\x03Z\x01/b\x06proto3"
+	"\x05token\x18\x01 \x01(\tR\x05token2o\n" +
+	"\x05Token\x120\n" +
+	"\rGenerateToken\x12\x0e.proto.Request\x1a\x0f.proto.Response\x124\n" +
+	"\x11GenerateSignature\x12\x0e.proto.Request\x1a\x0f.proto.ResponseB\x03Z\x01/b\x06proto3"
 
 var (
 	file_service_proto_rawDescOnce sync.Once
@@ -149,10 +150,12 @@ var file_service_proto_goTypes = []any{
 	(*Response)(nil), // 1: proto.Response
 }
 var file_service_proto_depIdxs = []int32{
-	0, // 0: proto.Token.Generate:input_type -> proto.Request
-	1, // 1: proto.Token.Generate:output_type -> proto.Response
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	0, // 0: proto.Token.GenerateToken:input_type -> proto.Request
+	0, // 1: proto.Token.GenerateSignature:input_type -> proto.Request
+	1, // 2: proto.Token.GenerateToken:output_type -> proto.Response
+	1, // 3: proto.Token.GenerateSignature:output_type -> proto.Response
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
