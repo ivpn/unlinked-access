@@ -74,6 +74,11 @@ func (s *Service) SyncManifest() error {
 
 	err = s.VerifyManifest(m)
 	if err != nil {
+		err = s.SaveManifestLog(m, manifestLog)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
@@ -81,6 +86,11 @@ func (s *Service) SyncManifest() error {
 
 	err = s.UpdateSubscriptions(m)
 	if err != nil {
+		err = s.SaveManifestLog(m, manifestLog)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
