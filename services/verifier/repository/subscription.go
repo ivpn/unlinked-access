@@ -18,27 +18,42 @@ func (d *Database) UpdateSubscriptions(subs []model.Subscription) error {
 		return nil
 	}
 
-	var ids []string
-	var activeUntilCases, tierCases strings.Builder
+	n := len(subs)
+	var (
+		activeUntilCase strings.Builder
+		tierCase        strings.Builder
+		idPlaceholders  strings.Builder
+	)
+	// 2 args per sub for active_until CASE, 2 for tier CASE, 1 for WHERE IN
+	args := make([]any, 0, n*5)
 
 	for _, sub := range subs {
-		id := sub.ID                               // assuming this is a string (e.g., UUID)
-		ids = append(ids, fmt.Sprintf("'%s'", id)) // quote the string for SQL
-
-		activeUntilCases.WriteString(fmt.Sprintf("WHEN '%s' THEN '%s' ", id, sub.ActiveUntil.Format("2006-01-02 15:04:05")))
-		tierCases.WriteString(fmt.Sprintf("WHEN '%s' THEN '%s' ", id, sub.Tier))
+		activeUntilCase.WriteString("WHEN ? THEN ? ")
+		args = append(args, sub.ID, sub.ActiveUntil)
 	}
 
-	sql := fmt.Sprintf(`
-		UPDATE %s
-		SET 
-			updated_at = NOW(),
-			active_until = CASE id %s END,
-			tier = CASE id %s END
-		WHERE id IN (%s);
-	`, d.TableName, activeUntilCases.String(), tierCases.String(), strings.Join(ids, ","))
+	for _, sub := range subs {
+		tierCase.WriteString("WHEN ? THEN ? ")
+		args = append(args, sub.ID, sub.Tier)
+	}
 
-	return d.Client.Exec(sql).Error
+	for i, sub := range subs {
+		if i > 0 {
+			idPlaceholders.WriteString(",")
+		}
+		idPlaceholders.WriteString("?")
+		args = append(args, sub.ID)
+	}
+
+	query := fmt.Sprintf(
+		"UPDATE %s SET active_until = CASE id %s END, tier = CASE id %s END WHERE id IN (%s)",
+		d.TableName,
+		activeUntilCase.String(),
+		tierCase.String(),
+		idPlaceholders.String(),
+	)
+
+	return d.Client.Exec(query, args...).Error
 }
 
 func joinInt64s(ids []int64) string {
