@@ -123,9 +123,6 @@ func (c Config) Validate() error {
 	if c.API.PreauthTTL <= 0 {
 		return errors.New("PREAUTH_TTL must be a positive duration")
 	}
-	if !c.Redis.TLSEnabled && !c.DevMode {
-		return errors.New("REDIS_TLS_ENABLED=false requires DEV_MODE=true")
-	}
 	if c.TokenServer.TLSEnabled {
 		if c.TokenServer.TLSCACertFile == "" {
 			return errors.New("required env var not set: TOKEN_TLS_CLIENT_CA_FILE")
