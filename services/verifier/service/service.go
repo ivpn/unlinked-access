@@ -74,6 +74,11 @@ func (s *Service) SyncManifest() error {
 
 	err = s.VerifyManifest(m)
 	if err != nil {
+		err = s.SaveManifestLog(m, manifestLog)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
@@ -81,6 +86,11 @@ func (s *Service) SyncManifest() error {
 
 	err = s.UpdateSubscriptions(m)
 	if err != nil {
+		err = s.SaveManifestLog(m, manifestLog)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
@@ -170,6 +180,8 @@ func (s *Service) UpdateSubscriptions(m model.Manifest) error {
 		}
 
 		subs, err := store.GetSubscriptions()
+		log.Printf("subs: %v", subs)
+		log.Printf("manifest subs: %v", m.Subscriptions)
 		if err != nil {
 			log.Printf("error fetching subscriptions from store: %v", err)
 			lastErr = err
