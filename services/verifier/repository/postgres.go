@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -99,4 +100,30 @@ func (d *PostgresDB) UpdateSubscriptions(subs []model.Subscription) error {
 		}
 		return nil
 	})
+}
+
+func (d *PostgresDB) GetLatestManifestLog() (model.ManifestLog, error) {
+	var logEntry model.ManifestLog
+	err := d.Client.Table("manifest_logs").Order("version DESC").First(&logEntry).Error
+	if err != nil {
+		return model.ManifestLog{}, err
+	}
+	return logEntry, nil
+}
+
+func (d *PostgresDB) AddManifestLog(log model.ManifestLog) error {
+	err := d.Client.Table("manifest_logs").Create(&log).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *PostgresDB) CleanupManifestLogs() error {
+	expirationTime := time.Now().AddDate(0, 0, -7)
+	err := d.Client.Table("manifest_logs").Where("created_at < ?", expirationTime).Delete(&model.ManifestLog{}).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
