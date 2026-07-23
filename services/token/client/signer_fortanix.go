@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
@@ -42,7 +41,8 @@ func (s *SignerFortanix) GenerateToken(ctx context.Context, input string) (*mode
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
 
-	digest := sha256.Sum256([]byte(s.Cfg.TokenPreKey + input))
+	// digest := sha256.Sum256([]byte(s.Cfg.TokenPreKey + input))
+	digest := sha512.Sum512([]byte(input))
 	data := sdkms.Blob(digest[:])
 
 	if s.Cfg.Mock {
