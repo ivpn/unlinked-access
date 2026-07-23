@@ -62,7 +62,7 @@ func (s *VerifierFortanix) Verify(signature string, data []byte) error {
 	message := sha512.Sum512([]byte(digestBase64))
 	mac := sdkms.Blob(sigData)
 	alg := sdkms.DigestAlgorithmSha256
-	keyId := s.Cfg.Service.FortanixKeyId
+	keyId := s.Cfg.Service.FortanixSignKeyId
 	req := sdkms.VerifyMacRequest{
 		Data: message[:],
 		Mac:  &mac,
