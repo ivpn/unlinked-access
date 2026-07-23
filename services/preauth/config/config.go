@@ -44,6 +44,7 @@ type TokenServerConfig struct {
 }
 
 type Config struct {
+	DevMode     bool
 	API         APIConfig
 	Redis       RedisConfig
 	TokenServer TokenServerConfig
@@ -64,6 +65,7 @@ func New() (Config, error) {
 	apiAllowIPs := strings.Split(os.Getenv("API_ALLOW_IPS"), ",")
 
 	return Config{
+		DevMode: os.Getenv("DEV_MODE") == "true",
 		API: APIConfig{
 			AddPort:           os.Getenv("PREAUTH_ADD_PORT"),
 			AddPSK:            os.Getenv("PREAUTH_ADD_PSK"),
@@ -120,6 +122,9 @@ func (c Config) Validate() error {
 	}
 	if c.API.PreauthTTL <= 0 {
 		return errors.New("PREAUTH_TTL must be a positive duration")
+	}
+	if !c.Redis.TLSEnabled && !c.DevMode {
+		return errors.New("REDIS_TLS_ENABLED=false requires DEV_MODE=true")
 	}
 	if c.TokenServer.TLSEnabled {
 		if c.TokenServer.TLSCACertFile == "" {

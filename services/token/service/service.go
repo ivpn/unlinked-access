@@ -65,7 +65,7 @@ func (s *Server) Start() error {
 		opts = append(opts, grpc.Creds(credentials.NewTLS(tlsCfg)))
 		log.Println("Token service TLS (mTLS) enabled")
 	} else {
-		log.Println("WARNING: Token service is running without TLS — do not use in production")
+		log.Println("WARNING: Token service TLS disabled (DEV_MODE)")
 	}
 
 	srv := grpc.NewServer(opts...)
