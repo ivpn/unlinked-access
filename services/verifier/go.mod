@@ -1,12 +1,13 @@
 module ivpn.net/auth/services/verifier
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.31.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.4
 	github.com/aws/aws-sdk-go-v2/service/kms v1.44.0
 	github.com/fortanix/sdkms-client-go v0.4.1
+	github.com/go-json-experiment/json v0.0.0-20260623181947-01eb4420fa68
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/gofiber/fiber/v2 v2.52.13
 	github.com/google/uuid v1.6.0
