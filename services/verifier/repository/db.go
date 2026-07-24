@@ -29,11 +29,6 @@ func NewDB(cfg config.Config) (*Database, error) {
 		}
 	}
 
-	err = migrate(db, cfg.DB.Table)
-	if err != nil {
-		return nil, err
-	}
-
 	return &Database{
 		Client:    db,
 		TableName: cfg.DB.Table,
@@ -76,19 +71,6 @@ func connect(cfg config.DBConfig) (*gorm.DB, error) {
 	log.Println("DB connection OK")
 
 	return db, nil
-}
-
-func migrate(db *gorm.DB, tableName string) error {
-	err := db.Table(tableName).AutoMigrate(
-		&model.ManifestLog{},
-	)
-	if err != nil {
-		return err
-	}
-
-	log.Println("DB migration OK")
-
-	return nil
 }
 
 func migrateSample(db *gorm.DB, tableName string) error {
