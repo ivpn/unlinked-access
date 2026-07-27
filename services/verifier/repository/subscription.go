@@ -9,7 +9,7 @@ import (
 
 func (d *Database) GetSubscriptions() ([]model.Subscription, error) {
 	var subs []model.Subscription
-	err := d.Client.Table(d.TableName).Find(&subs).Error
+	err := d.Client.Table(d.SubscriptionTableName).Find(&subs).Error
 	return subs, err
 }
 
@@ -38,7 +38,7 @@ func (d *Database) UpdateSubscriptions(subs []model.Subscription) error {
 			active_until = CASE id %s END,
 			tier = CASE id %s END
 		WHERE id IN (%s);
-	`, d.TableName, isActiveCases.String(), activeUntilCases.String(), tierCases.String(), strings.Join(ids, ","))
+	`, d.SubscriptionTableName, isActiveCases.String(), activeUntilCases.String(), tierCases.String(), strings.Join(ids, ","))
 
 	return d.Client.Exec(sql).Error
 }

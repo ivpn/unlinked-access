@@ -8,7 +8,7 @@ import (
 
 func (d *Database) GetLatestManifestLog() (model.ManifestLog, error) {
 	var log model.ManifestLog
-	err := d.Client.Table(d.TableName).Order("created_at DESC").First(&log).Error
+	err := d.Client.Table(d.ManifestLogTableName).Order("created_at DESC").First(&log).Error
 	if err != nil {
 		return model.ManifestLog{Version: 0}, nil
 	}
@@ -16,7 +16,7 @@ func (d *Database) GetLatestManifestLog() (model.ManifestLog, error) {
 }
 
 func (d *Database) AddManifestLog(log model.ManifestLog) error {
-	err := d.Client.Table(d.TableName).Create(&log).Error
+	err := d.Client.Table(d.ManifestLogTableName).Create(&log).Error
 	if err != nil {
 		return err
 	}
@@ -25,7 +25,7 @@ func (d *Database) AddManifestLog(log model.ManifestLog) error {
 
 func (d *Database) CleanupManifestLogs() error {
 	expirationTime := time.Now().AddDate(0, 0, -7)
-	err := d.Client.Table(d.TableName).Where("created_at < ?", expirationTime).Delete(&model.ManifestLog{}).Error
+	err := d.Client.Table(d.ManifestLogTableName).Where("created_at < ?", expirationTime).Delete(&model.ManifestLog{}).Error
 	if err != nil {
 		return err
 	}
