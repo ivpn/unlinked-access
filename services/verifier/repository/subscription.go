@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"ivpn.net/auth/services/verifier/model"
 )
@@ -24,8 +25,9 @@ func (d *Database) UpdateSubscriptions(subs []model.Subscription) error {
 		tierCase        strings.Builder
 		idPlaceholders  strings.Builder
 	)
-	// 2 args per sub for active_until CASE, 2 for tier CASE, 1 for WHERE IN
-	args := make([]any, 0, n*5)
+	// 1 arg for updated_at, 2 per sub for active_until CASE, 2 for tier CASE, 1 for WHERE IN
+	args := make([]any, 0, n*5+1)
+	args = append(args, time.Now())
 
 	for _, sub := range subs {
 		activeUntilCase.WriteString("WHEN ? THEN ? ")
@@ -46,7 +48,7 @@ func (d *Database) UpdateSubscriptions(subs []model.Subscription) error {
 	}
 
 	query := fmt.Sprintf(
-		"UPDATE %s SET active_until = CASE id %s END, tier = CASE id %s END WHERE id IN (%s)",
+		"UPDATE %s SET updated_at = ?, active_until = CASE id %s END, tier = CASE id %s END WHERE id IN (%s)",
 		d.TableName,
 		activeUntilCase.String(),
 		tierCase.String(),
