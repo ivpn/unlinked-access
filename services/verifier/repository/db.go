@@ -12,8 +12,9 @@ import (
 )
 
 type Database struct {
-	Client    *gorm.DB
-	TableName string
+	Client                *gorm.DB
+	SubscriptionTableName string
+	ManifestLogTableName  string
 }
 
 func NewDB(cfg config.Config) (*Database, error) {
@@ -23,15 +24,21 @@ func NewDB(cfg config.Config) (*Database, error) {
 	}
 
 	if cfg.Service.SampleData {
-		err = migrateSample(db, cfg.DB.Table)
+		err = migrateSampleData(db, cfg.DB.Table)
 		if err != nil {
 			return nil, err
 		}
 	}
 
+	err = migrateManifestLog(db, "manifest_logs")
+	if err != nil {
+		return nil, err
+	}
+
 	return &Database{
-		Client:    db,
-		TableName: cfg.DB.Table,
+		Client:                db,
+		SubscriptionTableName: cfg.DB.Table,
+		ManifestLogTableName:  "manifest_logs",
 	}, nil
 }
 
@@ -73,7 +80,20 @@ func connect(cfg config.DBConfig) (*gorm.DB, error) {
 	return db, nil
 }
 
-func migrateSample(db *gorm.DB, tableName string) error {
+func migrateManifestLog(db *gorm.DB, tableName string) error {
+	err := db.Table(tableName).AutoMigrate(
+		&model.ManifestLog{},
+	)
+	if err != nil {
+		return err
+	}
+
+	log.Println("DB migration OK")
+
+	return nil
+}
+
+func migrateSampleData(db *gorm.DB, tableName string) error {
 	err := db.Table(tableName).AutoMigrate(
 		&model.Subscription{},
 	)
