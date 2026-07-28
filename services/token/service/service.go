@@ -166,8 +166,7 @@ func (s *Server) GenerateSignature(ctx context.Context, req *proto.Request) (*pr
 
 // isAuthError detects HSM session expiry by inspecting the SDK's typed BackendError.
 func isAuthError(err error) bool {
-	var be *sdkms.BackendError
-	if errors.As(err, &be) {
+	if be, ok := errors.AsType[*sdkms.BackendError](err); ok {
 		return be.StatusCode == http.StatusUnauthorized || be.StatusCode == http.StatusForbidden
 	}
 	return false
