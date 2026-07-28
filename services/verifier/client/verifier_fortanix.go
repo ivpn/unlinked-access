@@ -91,8 +91,7 @@ func (s *VerifierFortanix) Authenticate() error {
 
 // IsAuthError returns true when err is a Fortanix BackendError with HTTP status 401 or 403.
 func (s *VerifierFortanix) IsAuthError(err error) bool {
-	var be *sdkms.BackendError
-	if errors.As(err, &be) {
+	if be, ok := errors.AsType[*sdkms.BackendError](err); ok {
 		return be.StatusCode == 401 || be.StatusCode == 403
 	}
 	return false
