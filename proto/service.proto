@@ -4,7 +4,13 @@ package proto;
 
 option go_package = "/";
 
-message Request {
+message TokenRequest {
+    string input = 1;
+    int32 ttl_minutes = 2;
+    bool salt = 3;
+}
+
+message SignatureRequest {
     string input = 1;
     int32 ttl_minutes = 2;
 }
@@ -14,6 +20,6 @@ message Response {
 }
 
 service Token {
-    rpc GenerateToken(Request) returns (Response);
-    rpc GenerateSignature(Request) returns (Response);
+    rpc GenerateToken(TokenRequest) returns (Response);
+    rpc GenerateSignature(SignatureRequest) returns (Response);
 }
