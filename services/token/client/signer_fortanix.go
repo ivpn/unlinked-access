@@ -36,12 +36,15 @@ func NewSignerFortanix(cfg config.Config) (*SignerFortanix, error) {
 	}, nil
 }
 
-func (s *SignerFortanix) GenerateToken(ctx context.Context, input string) (*model.HSMToken, error) {
+func (s *SignerFortanix) GenerateToken(ctx context.Context, input string, salt bool) (*model.HSMToken, error) {
 	if input == "" {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
 
-	// digest := sha256.Sum256([]byte(s.Cfg.TokenPreKey + input))
+	if salt {
+		input = s.Cfg.TokenPreKey + input
+	}
+
 	digest := sha512.Sum512([]byte(input))
 	data := sdkms.Blob(digest[:])
 

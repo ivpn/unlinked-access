@@ -15,12 +15,14 @@ type MockHSMClient struct {
 	mockToken *model.HSMToken
 	mockError error
 	input     string
+	salt      bool
 }
 
 // Token implements the HSMClient interface for the mock
-func (m *MockHSMClient) GenerateToken(ctx context.Context, input string) (*model.HSMToken, error) {
+func (m *MockHSMClient) GenerateToken(ctx context.Context, input string, salt bool) (*model.HSMToken, error) {
 	// Store the parameters for verification
 	m.input = input
+	m.salt = salt
 	return m.mockToken, m.mockError
 }
 
@@ -54,7 +56,7 @@ func TestGenerateToken_Success(t *testing.T) {
 	inputStr := "i-TEST-1234-ABCD"
 
 	// Act
-	token, err := svc.GenerateToken(context.Background(), &proto.Request{Input: inputStr})
+	token, err := svc.GenerateToken(context.Background(), &proto.TokenRequest{Input: inputStr})
 
 	// Assert
 	if err != nil {
@@ -87,7 +89,7 @@ func TestGenerateToken_Error(t *testing.T) {
 	inputStr := "i-TEST-1234-ABCD"
 
 	// Act
-	token, err := svc.GenerateToken(context.Background(), &proto.Request{Input: inputStr})
+	token, err := svc.GenerateToken(context.Background(), &proto.TokenRequest{Input: inputStr})
 
 	// Assert
 	if err != expectedError {
@@ -125,7 +127,7 @@ func TestGenerateToken_InvalidFormat(t *testing.T) {
 			mockHSM := &MockHSMClient{}
 			svc := New(mockHSM, cfg)
 
-			_, err := svc.GenerateToken(context.Background(), &proto.Request{Input: tc.input})
+			_, err := svc.GenerateToken(context.Background(), &proto.TokenRequest{Input: tc.input})
 			if err == nil {
 				t.Errorf("Expected error for input %q, got nil", tc.input)
 			}
@@ -161,7 +163,7 @@ func TestGenerateToken_DifferentParameters(t *testing.T) {
 			svc := New(mockHSM, cfg)
 
 			// Act
-			_, err := svc.GenerateToken(context.Background(), &proto.Request{Input: tc.input})
+			_, err := svc.GenerateToken(context.Background(), &proto.TokenRequest{Input: tc.input})
 
 			// Assert
 			if err != nil {
