@@ -5,4 +5,5 @@ type PreauthReq struct {
 	IsActive    bool   `json:"is_active" validate:"required"`
 	ActiveUntil string `json:"active_until" validate:"required"`
 	Tier        string `json:"tier" validate:"required"`
+	Salt        bool   `json:"salt" validate:"required"`
 }

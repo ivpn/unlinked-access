@@ -24,7 +24,7 @@ type Cache interface {
 }
 
 type TokenClient interface {
-	GenerateToken(string) (string, error)
+	GenerateToken(string, bool) (string, error)
 	GenerateSignature(string) (string, error)
 }
 
@@ -63,9 +63,9 @@ func (s *Service) GetPreAuth(ctx context.Context, ID string) (model.PreAuth, err
 	return retrieved, nil
 }
 
-func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive bool, activeUntil time.Time, tier string) ([]model.SessionService, error) {
+func (s *Service) AddPreAuth(ctx context.Context, accountId string, isActive bool, activeUntil time.Time, tier string, salt bool) ([]model.SessionService, error) {
 	// Generate token
-	token, err := s.Token.GenerateToken(accountId)
+	token, err := s.Token.GenerateToken(accountId, salt)
 	if err != nil {
 		log.Println("failed to generate token:", err)
 		return nil, err

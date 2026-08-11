@@ -19,7 +19,7 @@ var (
 )
 
 type Service interface {
-	AddPreAuth(context.Context, string, bool, time.Time, string) ([]model.SessionService, error)
+	AddPreAuth(context.Context, string, bool, time.Time, string, bool) ([]model.SessionService, error)
 	GetPreAuth(context.Context, string) (model.PreAuth, error)
 }
 
@@ -102,7 +102,7 @@ func (h *Handler) AddPreAuth(c *fiber.Ctx) error {
 		})
 	}
 
-	sessionServices, err := h.Service.AddPreAuth(c.Context(), req.AccountID, req.IsActive, activeUntil, req.Tier)
+	sessionServices, err := h.Service.AddPreAuth(c.Context(), req.AccountID, req.IsActive, activeUntil, req.Tier, req.Salt)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"error": AddPreAuthError,
