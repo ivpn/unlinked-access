@@ -30,7 +30,7 @@ var accountIDRegexp = regexp.MustCompile(`^i-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}
 var ErrAuthRequired = errors.New("hsm auth required")
 
 type Signer interface {
-	GenerateToken(ctx context.Context, input string) (*model.HSMToken, error)
+	GenerateToken(ctx context.Context, input string, salt bool) (*model.HSMToken, error)
 	GenerateSignature(ctx context.Context, input string) (*model.HSMToken, error)
 	Authenticate() error
 }
@@ -105,7 +105,7 @@ func buildServerTLS(cfg *config.Config) (*tls.Config, error) {
 	}, nil
 }
 
-func (s *Server) GenerateToken(ctx context.Context, req *proto.Request) (*proto.Response, error) {
+func (s *Server) GenerateToken(ctx context.Context, req *proto.TokenRequest) (*proto.Response, error) {
 	if len(req.Input) > maxInputBytes {
 		return nil, fmt.Errorf("input exceeds maximum allowed size of %d bytes", maxInputBytes)
 	}
@@ -116,12 +116,12 @@ func (s *Server) GenerateToken(ctx context.Context, req *proto.Request) (*proto.
 	reqCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	token, err := s.Signer.GenerateToken(reqCtx, req.Input)
+	token, err := s.Signer.GenerateToken(reqCtx, req.Input, req.Salt)
 	if err != nil {
 		if isAuthError(err) {
 			log.Println("Re-authenticating Signer session...")
 			if authErr := s.Signer.Authenticate(); authErr == nil {
-				token, err = s.Signer.GenerateToken(reqCtx, req.Input)
+				token, err = s.Signer.GenerateToken(reqCtx, req.Input, req.Salt)
 				if err != nil {
 					log.Println(err)
 					return nil, err
@@ -136,7 +136,7 @@ func (s *Server) GenerateToken(ctx context.Context, req *proto.Request) (*proto.
 	return &proto.Response{Token: token.Token}, nil
 }
 
-func (s *Server) GenerateSignature(ctx context.Context, req *proto.Request) (*proto.Response, error) {
+func (s *Server) GenerateSignature(ctx context.Context, req *proto.SignatureRequest) (*proto.Response, error) {
 	if len(req.Input) > maxInputBytes {
 		return nil, fmt.Errorf("input exceeds maximum allowed size of %d bytes", maxInputBytes)
 	}

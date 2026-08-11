@@ -7,4 +7,6 @@ type Account struct {
 	CreatedAt   time.Time `json:"created_at"`
 	ActiveUntil time.Time `json:"active_until"`
 	Product     string    `json:"product"`
+	// Salt is derived from services.salt via JOIN, not stored on the accounts table
+	Salt bool `json:"salt" gorm:"->;-:migration"`
 }

@@ -43,12 +43,16 @@ func NewSignerAWS(cfg config.Config) (*SignerAWS, error) {
 	}, nil
 }
 
-func (s *SignerAWS) GenerateToken(ctx context.Context, input string) (*model.HSMToken, error) {
+func (s *SignerAWS) GenerateToken(ctx context.Context, input string, salt bool) (*model.HSMToken, error) {
 	if input == "" {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
 
-	digest := sha256.Sum256([]byte(s.Cfg.TokenPreKey + input))
+	if salt {
+		input = s.Cfg.TokenPreKey + input
+	}
+
+	digest := sha256.Sum256([]byte(input))
 
 	if s.Cfg.Mock {
 		return &model.HSMToken{

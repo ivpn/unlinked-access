@@ -27,8 +27,8 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TokenClient interface {
-	GenerateToken(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
-	GenerateSignature(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error)
+	GenerateToken(ctx context.Context, in *TokenRequest, opts ...grpc.CallOption) (*Response, error)
+	GenerateSignature(ctx context.Context, in *SignatureRequest, opts ...grpc.CallOption) (*Response, error)
 }
 
 type tokenClient struct {
@@ -39,7 +39,7 @@ func NewTokenClient(cc grpc.ClientConnInterface) TokenClient {
 	return &tokenClient{cc}
 }
 
-func (c *tokenClient) GenerateToken(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
+func (c *tokenClient) GenerateToken(ctx context.Context, in *TokenRequest, opts ...grpc.CallOption) (*Response, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Response)
 	err := c.cc.Invoke(ctx, Token_GenerateToken_FullMethodName, in, out, cOpts...)
@@ -49,7 +49,7 @@ func (c *tokenClient) GenerateToken(ctx context.Context, in *Request, opts ...gr
 	return out, nil
 }
 
-func (c *tokenClient) GenerateSignature(ctx context.Context, in *Request, opts ...grpc.CallOption) (*Response, error) {
+func (c *tokenClient) GenerateSignature(ctx context.Context, in *SignatureRequest, opts ...grpc.CallOption) (*Response, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Response)
 	err := c.cc.Invoke(ctx, Token_GenerateSignature_FullMethodName, in, out, cOpts...)
@@ -63,8 +63,8 @@ func (c *tokenClient) GenerateSignature(ctx context.Context, in *Request, opts .
 // All implementations must embed UnimplementedTokenServer
 // for forward compatibility.
 type TokenServer interface {
-	GenerateToken(context.Context, *Request) (*Response, error)
-	GenerateSignature(context.Context, *Request) (*Response, error)
+	GenerateToken(context.Context, *TokenRequest) (*Response, error)
+	GenerateSignature(context.Context, *SignatureRequest) (*Response, error)
 	mustEmbedUnimplementedTokenServer()
 }
 
@@ -75,10 +75,10 @@ type TokenServer interface {
 // pointer dereference when methods are called.
 type UnimplementedTokenServer struct{}
 
-func (UnimplementedTokenServer) GenerateToken(context.Context, *Request) (*Response, error) {
+func (UnimplementedTokenServer) GenerateToken(context.Context, *TokenRequest) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateToken not implemented")
 }
-func (UnimplementedTokenServer) GenerateSignature(context.Context, *Request) (*Response, error) {
+func (UnimplementedTokenServer) GenerateSignature(context.Context, *SignatureRequest) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GenerateSignature not implemented")
 }
 func (UnimplementedTokenServer) mustEmbedUnimplementedTokenServer() {}
@@ -103,7 +103,7 @@ func RegisterTokenServer(s grpc.ServiceRegistrar, srv TokenServer) {
 }
 
 func _Token_GenerateToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Request)
+	in := new(TokenRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -115,13 +115,13 @@ func _Token_GenerateToken_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: Token_GenerateToken_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TokenServer).GenerateToken(ctx, req.(*Request))
+		return srv.(TokenServer).GenerateToken(ctx, req.(*TokenRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Token_GenerateSignature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Request)
+	in := new(SignatureRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func _Token_GenerateSignature_Handler(srv interface{}, ctx context.Context, dec 
 		FullMethod: Token_GenerateSignature_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TokenServer).GenerateSignature(ctx, req.(*Request))
+		return srv.(TokenServer).GenerateSignature(ctx, req.(*SignatureRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

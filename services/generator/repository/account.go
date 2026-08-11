@@ -19,9 +19,12 @@ func (d *Database) GetAccounts() ([]*model.Account, error) {
 		err = d.Client.Find(&accounts).Error
 	} else {
 		start := time.Now()
+		// Distinct on (account fields, salt): duplicates the account when its active services disagree on salt.
 		err = d.Client.
-			Where("is_new = ?", false).
-			Where("EXISTS (SELECT 1 FROM services WHERE services.accounting_id = accounts.accounting_id AND services.is_active = true AND accounts.active_until > NOW() - INTERVAL 14 DAY)").
+			Distinct("accounts.*", "services.salt").
+			Joins("JOIN services ON services.accounting_id = accounts.accounting_id AND services.is_active = true").
+			Where("accounts.is_new = ?", false).
+			Where("accounts.active_until > NOW() - INTERVAL 14 DAY").
 			Find(&accounts).Error
 
 		elapsed := time.Since(start)

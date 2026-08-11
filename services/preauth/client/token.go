@@ -34,9 +34,10 @@ func New(cfg config.TokenServerConfig) (*TokenClient, error) {
 	}, nil
 }
 
-func (c *TokenClient) GenerateToken(input string) (string, error) {
-	req := &proto.Request{
+func (c *TokenClient) GenerateToken(input string, salt bool) (string, error) {
+	req := &proto.TokenRequest{
 		Input: input,
+		Salt:  salt,
 	}
 
 	resp, err := c.Client.GenerateToken(context.Background(), req)
@@ -48,7 +49,7 @@ func (c *TokenClient) GenerateToken(input string) (string, error) {
 }
 
 func (c *TokenClient) GenerateSignature(input string) (string, error) {
-	req := &proto.Request{
+	req := &proto.SignatureRequest{
 		Input: input,
 	}
 
