@@ -38,7 +38,7 @@ type Store interface {
 }
 
 type TokenClient interface {
-	GenerateToken(string) (string, error)
+	GenerateToken(string, bool) (string, error)
 	GenerateSignature(string) (string, error)
 }
 
@@ -168,7 +168,7 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 				}
 
 				// Generate token for account ID
-				token, err := s.Token.GenerateToken(account.ID)
+				token, err := s.Token.GenerateToken(account.ID, account.Salt)
 				if err != nil {
 					log.Printf("[worker %d] failed to generate token for account %s: %v", workerID, account.ID, err)
 					failedCount.Add(1)

@@ -33,10 +33,10 @@ func New(cfg config.TokenServerConfig) (*TokenClient, error) {
 	}, nil
 }
 
-func (c *TokenClient) GenerateToken(input string) (string, error) {
+func (c *TokenClient) GenerateToken(input string, salt bool) (string, error) {
 	req := &proto.TokenRequest{
 		Input: input,
-		Salt:  false,
+		Salt:  salt,
 	}
 
 	resp, err := c.Client.GenerateToken(context.Background(), req)
