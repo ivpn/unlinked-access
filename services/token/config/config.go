@@ -9,18 +9,22 @@ type Config struct {
 	Host               string
 	Port               string
 	Mock               bool
-	AWSKeyId           string
+	DevMode            bool
+	AWSTokenKeyId      string
+	AWSSignKeyId       string
 	AWSAccessKeyId     string
 	AWSSecretAccessKey string
 	AWSRegion          string
 	FortanixEndpoint   string
 	FortanixApiKey     string
-	FortanixKeyId      string
+	FortanixTokenKeyId string
+	FortanixSignKeyId  string
 	TLSEnabled         bool
 	TLSCertFile        string
 	TLSKeyFile         string
 	TLSCAFile          string
 	Debug              bool
+	TokenPreKey        string
 }
 
 func New() (Config, error) {
@@ -28,18 +32,22 @@ func New() (Config, error) {
 		Host:               os.Getenv("TOKEN_HOST"),
 		Port:               os.Getenv("TOKEN_PORT"),
 		Mock:               os.Getenv("TOKEN_MOCK") == "true",
-		AWSKeyId:           os.Getenv("AWS_TOKEN_KEY_ID"),
+		DevMode:            os.Getenv("DEV_MODE") == "true",
+		AWSTokenKeyId:      os.Getenv("AWS_TOKEN_KEY_ID"),
+		AWSSignKeyId:       os.Getenv("AWS_SIGN_KEY_ID"),
 		AWSAccessKeyId:     os.Getenv("AWS_ACCESS_KEY_ID"),
 		AWSSecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
 		AWSRegion:          os.Getenv("AWS_REGION"),
 		FortanixEndpoint:   os.Getenv("FORTANIX_ENDPOINT"),
 		FortanixApiKey:     os.Getenv("FORTANIX_API_KEY"),
-		FortanixKeyId:      os.Getenv("FORTANIX_KEY_ID"),
+		FortanixTokenKeyId: os.Getenv("FORTANIX_TOKEN_KEY_ID"),
+		FortanixSignKeyId:  os.Getenv("FORTANIX_SIGN_KEY_ID"),
 		TLSEnabled:         os.Getenv("TOKEN_TLS_ENABLED") == "true",
 		TLSCertFile:        os.Getenv("TOKEN_TLS_CERT_FILE"),
 		TLSKeyFile:         os.Getenv("TOKEN_TLS_KEY_FILE"),
 		TLSCAFile:          os.Getenv("TOKEN_TLS_CA_FILE"),
 		Debug:              os.Getenv("TOKEN_DEBUG") == "true",
+		TokenPreKey:        os.Getenv("TOKEN_PRE_KEY"),
 	}, nil
 }
 
@@ -48,19 +56,22 @@ func (c *Config) Validate() error {
 	if c.Port == "" {
 		return errors.New("TOKEN_PORT is required")
 	}
-	if c.Mock {
-		return nil
+	if c.Mock && !c.DevMode {
+		return errors.New("TOKEN_MOCK=true requires DEV_MODE=true")
 	}
-	// Fortanix is the active signer (NewSignerFortanix is called from main.go).
-	// Validate the fields it needs at runtime so the process fails fast at startup.
-	if c.FortanixEndpoint == "" {
-		return errors.New("FORTANIX_ENDPOINT is required when TOKEN_MOCK=false")
+	if !c.TLSEnabled && !c.DevMode {
+		return errors.New("TOKEN_TLS_ENABLED=false requires DEV_MODE=true")
 	}
-	if c.FortanixApiKey == "" {
-		return errors.New("FORTANIX_API_KEY is required when TOKEN_MOCK=false")
-	}
-	if c.FortanixKeyId == "" {
-		return errors.New("FORTANIX_KEY_ID is required when TOKEN_MOCK=false")
+	if !c.Mock {
+		if c.FortanixApiKey == "" {
+			return errors.New("FORTANIX_API_KEY is required when TOKEN_MOCK=false")
+		}
+		if c.FortanixTokenKeyId == "" {
+			return errors.New("FORTANIX_TOKEN_KEY_ID is required when TOKEN_MOCK=false")
+		}
+		if c.FortanixSignKeyId == "" {
+			return errors.New("FORTANIX_SIGN_KEY_ID is required when TOKEN_MOCK=false")
+		}
 	}
 	if c.TLSEnabled {
 		if c.TLSCertFile == "" {

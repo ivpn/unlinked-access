@@ -21,28 +21,29 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type Request struct {
+type TokenRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Input         string                 `protobuf:"bytes,1,opt,name=input,proto3" json:"input,omitempty"`
 	TtlMinutes    int32                  `protobuf:"varint,2,opt,name=ttl_minutes,json=ttlMinutes,proto3" json:"ttl_minutes,omitempty"`
+	Salt          bool                   `protobuf:"varint,3,opt,name=salt,proto3" json:"salt,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Request) Reset() {
-	*x = Request{}
+func (x *TokenRequest) Reset() {
+	*x = TokenRequest{}
 	mi := &file_service_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Request) String() string {
+func (x *TokenRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Request) ProtoMessage() {}
+func (*TokenRequest) ProtoMessage() {}
 
-func (x *Request) ProtoReflect() protoreflect.Message {
+func (x *TokenRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_service_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -54,19 +55,78 @@ func (x *Request) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Request.ProtoReflect.Descriptor instead.
-func (*Request) Descriptor() ([]byte, []int) {
+// Deprecated: Use TokenRequest.ProtoReflect.Descriptor instead.
+func (*TokenRequest) Descriptor() ([]byte, []int) {
 	return file_service_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Request) GetInput() string {
+func (x *TokenRequest) GetInput() string {
 	if x != nil {
 		return x.Input
 	}
 	return ""
 }
 
-func (x *Request) GetTtlMinutes() int32 {
+func (x *TokenRequest) GetTtlMinutes() int32 {
+	if x != nil {
+		return x.TtlMinutes
+	}
+	return 0
+}
+
+func (x *TokenRequest) GetSalt() bool {
+	if x != nil {
+		return x.Salt
+	}
+	return false
+}
+
+type SignatureRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Input         string                 `protobuf:"bytes,1,opt,name=input,proto3" json:"input,omitempty"`
+	TtlMinutes    int32                  `protobuf:"varint,2,opt,name=ttl_minutes,json=ttlMinutes,proto3" json:"ttl_minutes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SignatureRequest) Reset() {
+	*x = SignatureRequest{}
+	mi := &file_service_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SignatureRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SignatureRequest) ProtoMessage() {}
+
+func (x *SignatureRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_service_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SignatureRequest.ProtoReflect.Descriptor instead.
+func (*SignatureRequest) Descriptor() ([]byte, []int) {
+	return file_service_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *SignatureRequest) GetInput() string {
+	if x != nil {
+		return x.Input
+	}
+	return ""
+}
+
+func (x *SignatureRequest) GetTtlMinutes() int32 {
 	if x != nil {
 		return x.TtlMinutes
 	}
@@ -82,7 +142,7 @@ type Response struct {
 
 func (x *Response) Reset() {
 	*x = Response{}
-	mi := &file_service_proto_msgTypes[1]
+	mi := &file_service_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -94,7 +154,7 @@ func (x *Response) String() string {
 func (*Response) ProtoMessage() {}
 
 func (x *Response) ProtoReflect() protoreflect.Message {
-	mi := &file_service_proto_msgTypes[1]
+	mi := &file_service_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -107,7 +167,7 @@ func (x *Response) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Response.ProtoReflect.Descriptor instead.
 func (*Response) Descriptor() ([]byte, []int) {
-	return file_service_proto_rawDescGZIP(), []int{1}
+	return file_service_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Response) GetToken() string {
@@ -121,15 +181,21 @@ var File_service_proto protoreflect.FileDescriptor
 
 const file_service_proto_rawDesc = "" +
 	"\n" +
-	"\rservice.proto\x12\x05proto\"@\n" +
-	"\aRequest\x12\x14\n" +
+	"\rservice.proto\x12\x05proto\"Y\n" +
+	"\fTokenRequest\x12\x14\n" +
+	"\x05input\x18\x01 \x01(\tR\x05input\x12\x1f\n" +
+	"\vttl_minutes\x18\x02 \x01(\x05R\n" +
+	"ttlMinutes\x12\x12\n" +
+	"\x04salt\x18\x03 \x01(\bR\x04salt\"I\n" +
+	"\x10SignatureRequest\x12\x14\n" +
 	"\x05input\x18\x01 \x01(\tR\x05input\x12\x1f\n" +
 	"\vttl_minutes\x18\x02 \x01(\x05R\n" +
 	"ttlMinutes\" \n" +
 	"\bResponse\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token24\n" +
-	"\x05Token\x12+\n" +
-	"\bGenerate\x12\x0e.proto.Request\x1a\x0f.proto.ResponseB\x03Z\x01/b\x06proto3"
+	"\x05token\x18\x01 \x01(\tR\x05token2}\n" +
+	"\x05Token\x125\n" +
+	"\rGenerateToken\x12\x13.proto.TokenRequest\x1a\x0f.proto.Response\x12=\n" +
+	"\x11GenerateSignature\x12\x17.proto.SignatureRequest\x1a\x0f.proto.ResponseB\x03Z\x01/b\x06proto3"
 
 var (
 	file_service_proto_rawDescOnce sync.Once
@@ -143,16 +209,19 @@ func file_service_proto_rawDescGZIP() []byte {
 	return file_service_proto_rawDescData
 }
 
-var file_service_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_service_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_service_proto_goTypes = []any{
-	(*Request)(nil),  // 0: proto.Request
-	(*Response)(nil), // 1: proto.Response
+	(*TokenRequest)(nil),     // 0: proto.TokenRequest
+	(*SignatureRequest)(nil), // 1: proto.SignatureRequest
+	(*Response)(nil),         // 2: proto.Response
 }
 var file_service_proto_depIdxs = []int32{
-	0, // 0: proto.Token.Generate:input_type -> proto.Request
-	1, // 1: proto.Token.Generate:output_type -> proto.Response
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	0, // 0: proto.Token.GenerateToken:input_type -> proto.TokenRequest
+	1, // 1: proto.Token.GenerateSignature:input_type -> proto.SignatureRequest
+	2, // 2: proto.Token.GenerateToken:output_type -> proto.Response
+	2, // 3: proto.Token.GenerateSignature:output_type -> proto.Response
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -169,7 +238,7 @@ func file_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_service_proto_rawDesc), len(file_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

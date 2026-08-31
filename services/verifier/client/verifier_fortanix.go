@@ -49,7 +49,7 @@ func (s *VerifierFortanix) Verify(signature string, data []byte) error {
 			return fmt.Errorf("invalid manifest signature (mock)")
 		}
 
-		log.Println("manifest signature (mock) OK")
+		log.Println("SECURITY ALERT: manifest signature verified using mock algorithm — not suitable for production")
 
 		return nil
 	}
@@ -62,7 +62,7 @@ func (s *VerifierFortanix) Verify(signature string, data []byte) error {
 	message := sha512.Sum512([]byte(digestBase64))
 	mac := sdkms.Blob(sigData)
 	alg := sdkms.DigestAlgorithmSha256
-	keyId := s.Cfg.Service.FortanixKeyId
+	keyId := s.Cfg.Service.FortanixSignKeyId
 	req := sdkms.VerifyMacRequest{
 		Data: message[:],
 		Mac:  &mac,
@@ -91,8 +91,7 @@ func (s *VerifierFortanix) Authenticate() error {
 
 // IsAuthError returns true when err is a Fortanix BackendError with HTTP status 401 or 403.
 func (s *VerifierFortanix) IsAuthError(err error) bool {
-	var be *sdkms.BackendError
-	if errors.As(err, &be) {
+	if be, ok := errors.AsType[*sdkms.BackendError](err); ok {
 		return be.StatusCode == 401 || be.StatusCode == 403
 	}
 	return false

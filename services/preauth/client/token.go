@@ -34,14 +34,28 @@ func New(cfg config.TokenServerConfig) (*TokenClient, error) {
 	}, nil
 }
 
-func (c *TokenClient) GenerateToken(input string) (string, error) {
-	req := &proto.Request{
+func (c *TokenClient) GenerateToken(input string, salt bool) (string, error) {
+	req := &proto.TokenRequest{
+		Input: input,
+		Salt:  salt,
+	}
+
+	resp, err := c.Client.GenerateToken(context.Background(), req)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	return resp.Token, nil
+}
+
+func (c *TokenClient) GenerateSignature(input string) (string, error) {
+	req := &proto.SignatureRequest{
 		Input: input,
 	}
 
-	resp, err := c.Client.Generate(context.Background(), req)
+	resp, err := c.Client.GenerateSignature(context.Background(), req)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate token: %w", err)
+		return "", fmt.Errorf("failed to generate signature: %w", err)
 	}
 
 	return resp.Token, nil
@@ -58,8 +72,8 @@ func connect(cfg config.TokenServerConfig) (*grpc.ClientConn, error) {
 		}
 		creds = grpc.WithTransportCredentials(credentials.NewTLS(tlsCfg))
 	} else {
-		if os.Getenv("PREAUTH_ALLOW_INSECURE") != "true" {
-			return nil, errors.New("TLS is disabled but PREAUTH_ALLOW_INSECURE is not set to 'true'; refusing insecure connection")
+		if os.Getenv("DEV_MODE") != "true" {
+			return nil, errors.New("TLS is disabled but DEV_MODE is not set to 'true'; refusing insecure connection")
 		}
 		log.Println("WARNING: gRPC connection to token server is unencrypted (TLS disabled)")
 		creds = grpc.WithTransportCredentials(insecure.NewCredentials())

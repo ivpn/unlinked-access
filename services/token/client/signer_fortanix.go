@@ -36,14 +36,17 @@ func NewSignerFortanix(cfg config.Config) (*SignerFortanix, error) {
 	}, nil
 }
 
-func (s *SignerFortanix) Generate(ctx context.Context, input string) (*model.HSMToken, error) {
+func (s *SignerFortanix) GenerateToken(ctx context.Context, input string, salt bool) (*model.HSMToken, error) {
 	if input == "" {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
 
+	if salt {
+		input = s.Cfg.TokenPreKey + input
+	}
+
 	digest := sha512.Sum512([]byte(input))
 	data := sdkms.Blob(digest[:])
-	keyId := s.Cfg.FortanixKeyId
 
 	if s.Cfg.Mock {
 		return &model.HSMToken{
@@ -55,7 +58,38 @@ func (s *SignerFortanix) Generate(ctx context.Context, input string) (*model.HSM
 	req := sdkms.MacRequest{
 		Data: data,
 		Alg:  &alg,
-		Key:  sdkms.SobjectByID(keyId),
+		Key:  sdkms.SobjectByID(s.Cfg.FortanixTokenKeyId),
+	}
+
+	res, err := s.Client.Mac(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.HSMToken{
+		Token: base64.StdEncoding.EncodeToString(res.Mac),
+	}, nil
+}
+
+func (s *SignerFortanix) GenerateSignature(ctx context.Context, input string) (*model.HSMToken, error) {
+	if input == "" {
+		return nil, fmt.Errorf("%s", ErrEmptyInput)
+	}
+
+	digest := sha512.Sum512([]byte(input))
+	data := sdkms.Blob(digest[:])
+
+	if s.Cfg.Mock {
+		return &model.HSMToken{
+			Token: base64.StdEncoding.EncodeToString(digest[:]),
+		}, nil
+	}
+
+	alg := sdkms.DigestAlgorithmSha256
+	req := sdkms.MacRequest{
+		Data: data,
+		Alg:  &alg,
+		Key:  sdkms.SobjectByID(s.Cfg.FortanixSignKeyId),
 	}
 
 	res, err := s.Client.Mac(ctx, req)
@@ -81,7 +115,7 @@ func (s *SignerFortanix) Verify(ctx context.Context, data [64]byte, signature st
 
 	mac := sdkms.Blob(sigData)
 	alg := sdkms.DigestAlgorithmSha256
-	keyId := s.Cfg.FortanixKeyId
+	keyId := s.Cfg.FortanixSignKeyId
 	req := sdkms.VerifyMacRequest{
 		Data: data[:],
 		Mac:  &mac,

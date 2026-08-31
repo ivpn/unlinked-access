@@ -22,7 +22,6 @@ import (
 type mongoSubscription struct {
 	ID          bson.Binary `bson:"_id,omitempty"`
 	TokenHash   string      `bson:"token_hash"`
-	IsActive    bool        `bson:"is_active"`
 	ActiveUntil time.Time   `bson:"active_until"`
 	Tier        string      `bson:"tier"`
 }
@@ -36,7 +35,6 @@ func toModelSubscription(ms mongoSubscription) model.Subscription {
 	return model.Subscription{
 		ID:          id.String(),
 		TokenHash:   ms.TokenHash,
-		IsActive:    ms.IsActive,
 		ActiveUntil: ms.ActiveUntil,
 		Tier:        ms.Tier,
 	}
@@ -168,7 +166,6 @@ func (m *MongoDB) UpdateSubscriptions(subs []model.Subscription) error {
 		}
 		filter := bson.D{{Key: "_id", Value: idBin}}
 		update := bson.D{{Key: "$set", Value: bson.D{
-			{Key: "is_active", Value: sub.IsActive},
 			{Key: "active_until", Value: sub.ActiveUntil},
 			{Key: "tier", Value: sub.Tier},
 			{Key: "updated_at", Value: time.Now()},
@@ -178,5 +175,39 @@ func (m *MongoDB) UpdateSubscriptions(subs []model.Subscription) error {
 
 	opts := options.BulkWrite().SetOrdered(false)
 	_, err := m.collection().BulkWrite(ctx, models, opts)
+	return err
+}
+
+func (m *MongoDB) GetLatestManifestLog() (model.ManifestLog, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	opts := options.FindOne().SetSort(bson.D{{Key: "created_at", Value: -1}})
+	var logEntry model.ManifestLog
+	err := m.Client.Database(m.DBName).Collection("manifest_logs").FindOne(ctx, bson.D{}, opts).Decode(&logEntry)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return model.ManifestLog{}, fmt.Errorf("no manifest logs found")
+		}
+		return model.ManifestLog{}, err
+	}
+
+	return logEntry, nil
+}
+
+func (m *MongoDB) AddManifestLog(logEntry model.ManifestLog) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	_, err := m.Client.Database(m.DBName).Collection("manifest_logs").InsertOne(ctx, logEntry)
+	return err
+}
+
+func (m *MongoDB) CleanupManifestLogs() error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	expirationTime := time.Now().AddDate(0, 0, -7)
+	_, err := m.Client.Database(m.DBName).Collection("manifest_logs").DeleteMany(ctx, bson.D{{Key: "created_at", Value: bson.D{{Key: "$lt", Value: expirationTime}}}})
 	return err
 }

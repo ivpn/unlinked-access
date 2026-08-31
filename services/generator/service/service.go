@@ -38,7 +38,8 @@ type Store interface {
 }
 
 type TokenClient interface {
-	GenerateToken(string) (string, error)
+	GenerateToken(string, bool) (string, error)
+	GenerateSignature(string) (string, error)
 }
 
 type Service struct {
@@ -117,8 +118,11 @@ func (s *Service) CreateManifest() (*model.Manifest, error) {
 		return nil, err
 	}
 
+	version := time.Now().UTC().Year()*100000000 + int(time.Now().UTC().Month())*1000000 + time.Now().UTC().Day()*10000 + time.Now().UTC().Hour()*100 + time.Now().UTC().Minute()
+
 	manifest := &model.Manifest{
 		ID:            uuid.New().String(),
+		Version:       version,
 		CreatedAt:     time.Now(),
 		ValidUntil:    time.Now().Add(3 * time.Hour),
 		Subscriptions: subs,
@@ -167,7 +171,7 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 				}
 
 				// Generate token for account ID
-				token, err := s.Token.GenerateToken(account.ID)
+				token, err := s.Token.GenerateToken(account.ID, account.Salt)
 				if err != nil {
 					log.Printf("[worker %d] failed to generate token for account %s: %v", workerID, account.ID, err)
 					failedCount.Add(1)
@@ -193,7 +197,6 @@ func (s *Service) GenerateSubscriptions() ([]model.Subscription, error) {
 
 				results <- model.Subscription{
 					TokenHash:   base64.StdEncoding.EncodeToString(tokenHash[:]),
-					IsActive:    account.IsActive,
 					ActiveUntil: roundedUntil,
 					Tier:        tier,
 				}
@@ -278,7 +281,7 @@ func (s *Service) SignManifest(m *model.Manifest) error {
 	digestBase64 := base64.StdEncoding.EncodeToString(digest[:])
 
 	// Generate signature for manifest hash
-	signature, err := s.Token.GenerateToken(digestBase64)
+	signature, err := s.Token.GenerateSignature(digestBase64)
 	if err != nil {
 		log.Println("error generating token for manifest hash:", err)
 		return err

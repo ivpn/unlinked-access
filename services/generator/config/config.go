@@ -26,6 +26,7 @@ type TokenServerConfig struct {
 type ServiceConfig struct {
 	SampleData bool
 	Mock       bool
+	DevMode    bool
 	TPS        int // total TPS across all goroutines
 }
 
@@ -60,6 +61,7 @@ func New() (Config, error) {
 		Service: ServiceConfig{
 			SampleData: os.Getenv("SAMPLE_DATA") == "true",
 			Mock:       os.Getenv("GENERATOR_MOCK") == "true",
+			DevMode:    os.Getenv("DEV_MODE") == "true",
 			TPS:        tps,
 		},
 	}, nil
@@ -83,6 +85,9 @@ func (c Config) Validate() error {
 	}
 	if c.Service.TPS <= 0 {
 		return errors.New("GENERATOR_TPS must be a positive integer")
+	}
+	if c.Service.Mock && !c.Service.DevMode {
+		return errors.New("GENERATOR_MOCK=true requires DEV_MODE=true")
 	}
 	if c.TokenServer.TLSEnabled {
 		if c.TokenServer.TLSCACertFile == "" {

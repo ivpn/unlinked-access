@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"crypto/sha256"
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
@@ -13,8 +14,6 @@ import (
 	"ivpn.net/auth/services/token/config"
 	"ivpn.net/auth/services/token/model"
 )
-
-const ErrEmptyInput = "input string cannot be empty"
 
 type SignerAWS struct {
 	Cfg    *config.Config
@@ -44,7 +43,40 @@ func NewSignerAWS(cfg config.Config) (*SignerAWS, error) {
 	}, nil
 }
 
-func (s *SignerAWS) Generate(ctx context.Context, input string) (*model.HSMToken, error) {
+func (s *SignerAWS) GenerateToken(ctx context.Context, input string, salt bool) (*model.HSMToken, error) {
+	if input == "" {
+		return nil, fmt.Errorf("%s", ErrEmptyInput)
+	}
+
+	if salt {
+		input = s.Cfg.TokenPreKey + input
+	}
+
+	digest := sha256.Sum256([]byte(input))
+
+	if s.Cfg.Mock {
+		return &model.HSMToken{
+			Token: base64.StdEncoding.EncodeToString(digest[:]),
+		}, nil
+	}
+
+	generateInput := &kms.GenerateMacInput{
+		KeyId:        &s.Cfg.AWSTokenKeyId,
+		Message:      digest[:],
+		MacAlgorithm: types.MacAlgorithmSpecHmacSha256,
+	}
+
+	signOut, err := s.Client.GenerateMac(ctx, generateInput)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign input: %w", err)
+	}
+
+	return &model.HSMToken{
+		Token: base64.StdEncoding.EncodeToString(signOut.Mac),
+	}, nil
+}
+
+func (s *SignerAWS) GenerateSignature(ctx context.Context, input string) (*model.HSMToken, error) {
 	if input == "" {
 		return nil, fmt.Errorf("%s", ErrEmptyInput)
 	}
@@ -58,7 +90,7 @@ func (s *SignerAWS) Generate(ctx context.Context, input string) (*model.HSMToken
 	}
 
 	generateInput := &kms.GenerateMacInput{
-		KeyId:        &s.Cfg.AWSKeyId,
+		KeyId:        &s.Cfg.AWSSignKeyId,
 		Message:      digest[:],
 		MacAlgorithm: types.MacAlgorithmSpecHmacSha256,
 	}

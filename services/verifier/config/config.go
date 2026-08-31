@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"os"
+	"strings"
 )
 
 type APIConfig struct {
@@ -42,13 +43,14 @@ type NoSQLDBConfig struct {
 type ServiceConfig struct {
 	SampleData         bool
 	Mock               bool
+	DevMode            bool
 	AWSKeyId           string
 	AWSAccessKeyId     string
 	AWSSecretAccessKey string
 	AWSRegion          string
 	FortanixEndpoint   string
 	FortanixApiKey     string
-	FortanixKeyId      string
+	FortanixSignKeyId  string
 }
 
 type Config struct {
@@ -94,13 +96,14 @@ func New() (Config, error) {
 		Service: ServiceConfig{
 			SampleData:         os.Getenv("SAMPLE_DATA") == "true",
 			Mock:               os.Getenv("TOKEN_MOCK") == "true",
+			DevMode:            os.Getenv("DEV_MODE") == "true",
 			AWSKeyId:           os.Getenv("AWS_TOKEN_KEY_ID"),
 			AWSAccessKeyId:     os.Getenv("AWS_ACCESS_KEY_ID"),
 			AWSSecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
 			AWSRegion:          os.Getenv("AWS_REGION"),
 			FortanixEndpoint:   os.Getenv("FORTANIX_ENDPOINT"),
 			FortanixApiKey:     os.Getenv("FORTANIX_API_KEY"),
-			FortanixKeyId:      os.Getenv("FORTANIX_KEY_ID"),
+			FortanixSignKeyId:  os.Getenv("FORTANIX_SIGN_KEY_ID"),
 		},
 	}, nil
 }
@@ -110,8 +113,17 @@ func (c Config) Validate() error {
 	if c.API.ManifestURL == "" {
 		return errors.New("required env var not set: MANIFEST_URL")
 	}
+	if !strings.HasPrefix(c.API.ManifestURL, "https://") {
+		return errors.New("MANIFEST_URL must use HTTPS")
+	}
 	if c.API.ManifestPSK == "" {
 		return errors.New("required env var not set: MANIFEST_PSK")
+	}
+	if c.Service.Mock && !c.Service.DevMode {
+		return errors.New("TOKEN_MOCK=true requires DEV_MODE=true")
+	}
+	if c.PGDB.Host != "" && c.PGDB.SSLMode == "disable" && !c.Service.DevMode {
+		return errors.New("CLIENT_PGSQL_SSLMODE=disable requires DEV_MODE=true")
 	}
 	if !c.Service.Mock {
 		if c.Service.FortanixEndpoint == "" {
@@ -120,8 +132,8 @@ func (c Config) Validate() error {
 		if c.Service.FortanixApiKey == "" {
 			return errors.New("required env var not set: FORTANIX_API_KEY")
 		}
-		if c.Service.FortanixKeyId == "" {
-			return errors.New("required env var not set: FORTANIX_KEY_ID")
+		if c.Service.FortanixSignKeyId == "" {
+			return errors.New("required env var not set: FORTANIX_SIGN_KEY_ID")
 		}
 	}
 	return nil

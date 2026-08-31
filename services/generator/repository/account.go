@@ -19,9 +19,12 @@ func (d *Database) GetAccounts() ([]*model.Account, error) {
 		err = d.Client.Find(&accounts).Error
 	} else {
 		start := time.Now()
+		// Distinct on (account fields, salt): duplicates the account when its active services disagree on salt.
 		err = d.Client.
-			Where("is_new = ?", false).
-			Where("EXISTS (SELECT 1 FROM services WHERE services.accounting_id = accounts.accounting_id AND services.is_active = true AND accounts.active_until > NOW() - INTERVAL 14 DAY)").
+			Distinct("accounts.*", "services.salt").
+			Joins("JOIN services ON services.accounting_id = accounts.accounting_id AND services.is_active = true").
+			Where("accounts.is_new = ?", false).
+			Where("accounts.active_until > NOW() - INTERVAL 14 DAY").
 			Find(&accounts).Error
 
 		elapsed := time.Since(start)
@@ -41,7 +44,6 @@ func (d *Database) GetAccountsMock(count int) ([]*model.Account, error) {
 		accounts[i] = &model.Account{
 			ID:          id,
 			CreatedAt:   time.Now(),
-			IsActive:    true,
 			ActiveUntil: time.Now().AddDate(0, i%12+1, 0), // Active for x months
 			Product:     fmt.Sprintf("Tier %d", i%3+1),    // Mocking different tiers
 		}

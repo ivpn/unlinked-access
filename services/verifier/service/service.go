@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jasonlvhit/gocron"
 	"ivpn.net/auth/services/verifier/client/http"
 	"ivpn.net/auth/services/verifier/config"
@@ -15,6 +16,9 @@ import (
 type Store interface {
 	GetSubscriptions() ([]model.Subscription, error)
 	UpdateSubscriptions([]model.Subscription) error
+	GetLatestManifestLog() (model.ManifestLog, error)
+	AddManifestLog(model.ManifestLog) error
+	CleanupManifestLogs() error
 }
 
 type Verifier interface {
@@ -49,6 +53,11 @@ func (s *Service) Start() error {
 		log.Printf("error syncing manifest: %v", err)
 	}
 
+	err = gocron.Every(1).Day().Do(s.CleanupManifestLogs)
+	if err != nil {
+		log.Printf("error cleaning up manifest logs: %v", err)
+	}
+
 	// Start all the pending jobs
 	<-gocron.Start()
 
@@ -61,12 +70,33 @@ func (s *Service) SyncManifest() error {
 		return err
 	}
 
+	manifestLog := s.CreateManifestLog(m)
+
 	err = s.VerifyManifest(m)
 	if err != nil {
+		err = s.SaveManifestLog(m, manifestLog)
+		if err != nil {
+			return err
+		}
+
 		return err
 	}
 
+	manifestLog.SignatureValid = true
+
 	err = s.UpdateSubscriptions(m)
+	if err != nil {
+		err = s.SaveManifestLog(m, manifestLog)
+		if err != nil {
+			return err
+		}
+
+		return err
+	}
+
+	manifestLog.Status = "success"
+
+	err = s.SaveManifestLog(m, manifestLog)
 	if err != nil {
 		return err
 	}
@@ -124,9 +154,31 @@ func (s *Service) VerifyManifest(m model.Manifest) error {
 	return nil
 }
 
+func (s *Service) VerifyManifestVersion(m model.Manifest, store Store) error {
+	log.Printf("verifying manifest version: %v", m.Version)
+
+	latestLog, err := store.GetLatestManifestLog()
+	if err != nil {
+		log.Printf("error fetching latest manifest log: %v", err)
+		return err
+	}
+
+	if m.Version <= latestLog.Version {
+		return fmt.Errorf("manifest version is not newer than the latest log")
+	}
+
+	return nil
+}
+
 func (s *Service) UpdateSubscriptions(m model.Manifest) error {
 	var lastErr error
 	for _, store := range s.Stores {
+		if err := s.VerifyManifestVersion(m, store); err != nil {
+			log.Printf("error verifying manifest version: %v", err)
+			lastErr = err
+			continue
+		}
+
 		subs, err := store.GetSubscriptions()
 		if err != nil {
 			log.Printf("error fetching subscriptions from store: %v", err)
@@ -154,10 +206,39 @@ func (s *Service) UpdateSubscriptions(m model.Manifest) error {
 	return lastErr
 }
 
+func (s *Service) CreateManifestLog(m model.Manifest) model.ManifestLog {
+	return model.ManifestLog{
+		ID:             uuid.New().String(),
+		Version:        m.Version,
+		CreatedAt:      time.Now(),
+		SignatureValid: false,
+		Status:         "failed",
+	}
+}
+
+func (s *Service) SaveManifestLog(m model.Manifest, manifestLog model.ManifestLog) error {
+	for _, store := range s.Stores {
+		if err := store.AddManifestLog(manifestLog); err != nil {
+			log.Printf("error adding manifest log entry to store: %v", err)
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Service) CleanupManifestLogs() error {
+	for _, store := range s.Stores {
+		if err := store.CleanupManifestLogs(); err != nil {
+			log.Printf("error removing expired manifest logs from store: %v", err)
+			return err
+		}
+	}
+	return nil
+}
+
 func UpdateSubscriptionFromManifest(sub model.Subscription, manifestSubs []model.Subscription) (model.Subscription, error) {
 	for _, s := range manifestSubs {
 		if sub.TokenHash == s.TokenHash {
-			sub.IsActive = s.IsActive
 			sub.ActiveUntil = s.ActiveUntil
 			sub.Tier = s.Tier
 			return sub, nil
