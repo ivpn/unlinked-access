@@ -122,9 +122,6 @@ func (c Config) Validate() error {
 	if c.Service.Mock && !c.Service.DevMode {
 		return errors.New("TOKEN_MOCK=true requires DEV_MODE=true")
 	}
-	if c.PGDB.Host != "" && c.PGDB.SSLMode == "disable" && !c.Service.DevMode {
-		return errors.New("CLIENT_PGSQL_SSLMODE=disable requires DEV_MODE=true")
-	}
 	if !c.Service.Mock {
 		if c.Service.FortanixEndpoint == "" {
 			return errors.New("required env var not set: FORTANIX_ENDPOINT")
