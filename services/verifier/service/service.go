@@ -173,11 +173,11 @@ func (s *Service) VerifyManifestVersion(m model.Manifest, store Store) error {
 func (s *Service) UpdateSubscriptions(m model.Manifest) error {
 	var lastErr error
 	for _, store := range s.Stores {
-		// if err := s.VerifyManifestVersion(m, store); err != nil {
-		// 	log.Printf("error verifying manifest version: %v", err)
-		// 	lastErr = err
-		// 	continue
-		// }
+		if err := s.VerifyManifestVersion(m, store); err != nil {
+			log.Printf("error verifying manifest version: %v", err)
+			lastErr = err
+			continue
+		}
 
 		subs, err := store.GetSubscriptions()
 		if err != nil {
