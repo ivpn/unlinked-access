@@ -17,6 +17,36 @@ type PostgresDB struct {
 	TableName string
 }
 
+// postgresManifestLog mirrors model.ManifestLog but widens Version to int64,
+// since Postgres stores it as bigint while other stores keep using int.
+type postgresManifestLog struct {
+	ID             string    `json:"id"`
+	Version        int64     `json:"version"`
+	CreatedAt      time.Time `json:"created_at"`
+	SignatureValid bool      `json:"signature_valid"`
+	Status         string    `json:"status"`
+}
+
+func newPostgresManifestLog(log model.ManifestLog) postgresManifestLog {
+	return postgresManifestLog{
+		ID:             log.ID,
+		Version:        int64(log.Version),
+		CreatedAt:      log.CreatedAt,
+		SignatureValid: log.SignatureValid,
+		Status:         log.Status,
+	}
+}
+
+func (l postgresManifestLog) toModel() model.ManifestLog {
+	return model.ManifestLog{
+		ID:             l.ID,
+		Version:        int(l.Version),
+		CreatedAt:      l.CreatedAt,
+		SignatureValid: l.SignatureValid,
+		Status:         l.Status,
+	}
+}
+
 func NewPostgresDB(cfg config.Config) (*PostgresDB, error) {
 	db, err := connectPostgres(cfg.PGDB)
 	if err != nil {
@@ -103,16 +133,17 @@ func (d *PostgresDB) UpdateSubscriptions(subs []model.Subscription) error {
 }
 
 func (d *PostgresDB) GetLatestManifestLog() (model.ManifestLog, error) {
-	var logEntry model.ManifestLog
+	var logEntry postgresManifestLog
 	err := d.Client.Table("manifest_logs").Order("version DESC").First(&logEntry).Error
 	if err != nil {
 		return model.ManifestLog{Version: 0}, nil
 	}
-	return logEntry, nil
+	return logEntry.toModel(), nil
 }
 
 func (d *PostgresDB) AddManifestLog(log model.ManifestLog) error {
-	err := d.Client.Table("manifest_logs").Create(&log).Error
+	entry := newPostgresManifestLog(log)
+	err := d.Client.Table("manifest_logs").Create(&entry).Error
 	if err != nil {
 		return err
 	}
@@ -121,7 +152,7 @@ func (d *PostgresDB) AddManifestLog(log model.ManifestLog) error {
 
 func (d *PostgresDB) CleanupManifestLogs() error {
 	expirationTime := time.Now().AddDate(0, 0, -7)
-	err := d.Client.Table("manifest_logs").Where("created_at < ?", expirationTime).Delete(&model.ManifestLog{}).Error
+	err := d.Client.Table("manifest_logs").Where("created_at < ?", expirationTime).Delete(&postgresManifestLog{}).Error
 	if err != nil {
 		return err
 	}
