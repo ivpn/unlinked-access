@@ -116,6 +116,7 @@ func (d *PostgresDB) UpdateSubscriptions(subs []model.Subscription) error {
 		return nil
 	}
 
+	now := time.Now()
 	return d.Client.Transaction(func(tx *gorm.DB) error {
 		for _, sub := range subs {
 			result := tx.Table(d.TableName).
@@ -123,6 +124,7 @@ func (d *PostgresDB) UpdateSubscriptions(subs []model.Subscription) error {
 				Updates(map[string]any{
 					"active_until": sub.ActiveUntil,
 					"tier":         sub.Tier,
+					"updated_at":   now,
 				})
 			if result.Error != nil {
 				return result.Error
